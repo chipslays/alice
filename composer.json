@@ -1,0 +1,16 @@
+{
+    "name": "alice/sdk",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Alice\\": "src/"
+        }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^8.0"
+    },
+    "require": {
+        "psr/container": "^2.0"
+    }
+}
