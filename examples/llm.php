@@ -6,6 +6,8 @@ use Alice\Alice;
 use Alice\Context;
 use Alice\Contracts\Middleware;
 use Alice\Settings;
+use Alice\State\Session;
+use Alice\Support\Container;
 
 // --- 1. Подготовка тестовых классов (чтобы не создавать кучу файлов) ---
 
@@ -70,13 +72,12 @@ $fakeJson = json_encode([
 ]);
 $alice->fake($fakeJson);
 
-
 // --- 3. Настройка DI (Опционально) ---
 
 // Если хотим использовать LoggerService, надо чтобы контейнер знал о нем
 // (или он создастся сам, если нет конструктора, тут autowiring сработает)
 // Но для чистоты можно зарегистрировать singleton:
-$alice->container->singleton(LoggerService::class);
+Container::getInstance()->singleton(LoggerService::class);
 
 
 // --- 4. Регистрация Middleware и Событий ---
@@ -99,7 +100,8 @@ $alice->group(function (Alice $groupAlice) {
     $groupAlice->on(['request.command' => '/admin_{command}'], function (
         Context $context,
         LoggerService $logger,
-        string $command
+        string $command,
+        Session $session
     ) {
         dump($command);
         $cmd = $context->get('request.command');
@@ -113,7 +115,6 @@ $alice->group(function (Alice $groupAlice) {
     $groupAlice->on(['request.command' => '/ban'], function () {
         echo "Bot: Ban hammer!\n";
     });
-
 })->middleware(AdminMiddleware::class); // <-- Применяем middleware ко всей группе
 
 

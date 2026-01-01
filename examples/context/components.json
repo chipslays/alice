@@ -23,12 +23,11 @@
       "user_id": "4518AB6CBE34705C24285C5D29275587658490AF92C4F213EFB79E7EEA5E16D6"
     },
     "request": {
-      "command": "поддержка",
-      "original_utterance": "hello world",
+      "command": "версия",
+      "original_utterance": "версия",
       "nlu": {
         "tokens": [
-          "hello",
-          "world"
+          "версия"
         ],
         "entities": [],
         "intents": {}
@@ -39,9 +38,7 @@
       "type": "SimpleUtterance"
     },
     "state": {
-      "session": {
-        "__scene__": "foo"
-      },
+      "session": {},
       "user": {},
       "application": {}
     },

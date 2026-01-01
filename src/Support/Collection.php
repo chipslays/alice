@@ -26,18 +26,6 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Creates a new instance of the current class with the given items.
-     *
-     * @param array $items The initial items of the collection.
-     *
-     * @return static
-     */
-    public static function make(array $items = []): static
-    {
-        return new static($items);
-    }
-
-    /**
      * Return all items of the collection.
      *
      * @return array
@@ -327,11 +315,11 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
         return count($this->items);
     }
 
-/**
- * Returns an iterator for the current collection.
- *
- * @return Traversable The iterator for the current collection.
- */
+    /**
+     * Returns an iterator for the current collection.
+     *
+     * @return Traversable The iterator for the current collection.
+     */
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->items);
@@ -394,12 +382,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      *
      * Returns the collection as an array that can be serialized to JSON.
      */
-
     public function jsonSerialize(): array
     {
         return $this->toArray();
     }
-
 
     /**
      * Returns the collection as a JSON string.

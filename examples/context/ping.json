@@ -23,12 +23,11 @@
       "user_id": "4518AB6CBE34705C24285C5D29275587658490AF92C4F213EFB79E7EEA5E16D6"
     },
     "request": {
-      "command": "поддержка",
-      "original_utterance": "hello world",
+      "command": "ping",
+      "original_utterance": "ping",
       "nlu": {
         "tokens": [
-          "hello",
-          "world"
+          "ping"
         ],
         "entities": [],
         "intents": {}
@@ -40,7 +39,7 @@
     },
     "state": {
       "session": {
-        "__scene__": "foo"
+        "already_call": true
       },
       "user": {},
       "application": {}

@@ -5,7 +5,10 @@
     "autoload": {
         "psr-4": {
             "Alice\\": "src/"
-        }
+        },
+        "files": [
+            "helpers.php"
+        ]
     },
     "require-dev": {
         "symfony/var-dumper": "^8.0"

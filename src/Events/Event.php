@@ -11,7 +11,7 @@ class Event
     public array $middleware = [];
 
     public function __construct(
-        public readonly array|string $rules,
+        public readonly Closure|array|string $rules,
         public readonly Closure|array|string $handler
     ) {}
 
@@ -27,5 +27,4 @@ class Event
         $this->middleware = array_merge($this->middleware, $middlewares);
         return $this;
     }
-
 }

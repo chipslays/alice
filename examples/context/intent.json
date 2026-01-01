@@ -1,0 +1,74 @@
+{
+    "meta": {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "client_id": "ru.yandex.searchplugin/7.16 (none none; android 4.4.2)",
+      "interfaces": {
+        "screen": {},
+        "payments": {},
+        "account_linking": {}
+      }
+    },
+    "session": {
+      "message_id": 4,
+      "session_id": "1785c91f-f5ba-499d-8e40-ea79e9d9d069",
+      "skill_id": "c4bf0455-6a4d-45aa-9934-af843511e271",
+      "user": {
+        "user_id": "8DCCD45ABCC750BA4DDBB128DACB3DFFFA726C6170A93ED1B5B1D3BC7DD6BE12"
+      },
+      "application": {
+        "application_id": "2B114656443EFF3DC60224A1AF1779F351D72E1DF9D78F9471259A89CB23604A"
+      },
+      "new": false,
+      "user_id": "2B114656443EFF3DC60224A1AF1779F351D72E1DF9D78F9471259A89CB23604A"
+    },
+    "request": {
+      "command": "найди монстров в доме",
+      "original_utterance": "найди монстров в доме",
+      "nlu": {
+        "tokens": [
+          "найди",
+          "монстров",
+          "в",
+          "доме"
+        ],
+        "entities": [],
+        "intents": {
+          "MONSTER.SEARCH": {
+            "slots": {
+              "place": {
+                "type": "YANDEX.STRING",
+                "tokens": {
+                  "start": 2,
+                  "end": 4
+                },
+                "value": "в доме"
+              }
+            }
+          },
+          "YANDEX.BOOK.SEARCH": {
+            "slots": {
+              "book": {
+                "type": "string",
+                "tokens": {
+                  "start": 1,
+                  "end": 4
+                },
+                "value": "монстров в доме"
+              }
+            }
+          }
+        }
+      },
+      "markup": {
+        "dangerous_context": false
+      },
+      "type": "SimpleUtterance"
+    },
+    "state": {
+      "session": {},
+      "user": {},
+      "application": {}
+    },
+    "version": "1.0"
+  }

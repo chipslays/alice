@@ -13,22 +13,25 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
-use ReflectionIntersectionType;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionUnionType;
-use Throwable;
+use ReflectionIntersectionType;
 
 /**
- * Базовая реализация исключений PSR-11, если пакет psr/container не установлен.
- * Если установлен, эти классы можно убрать или наследовать от вендорных.
+ * Базовая реализация исключений PSR-11.
  */
 class ContainerException extends Exception implements ContainerExceptionInterface {}
 class NotFoundException extends ContainerException implements NotFoundExceptionInterface {}
 
 class Container implements ContainerInterface
 {
+    /**
+     * Глобальный экземпляр контейнера.
+     */
+    protected static ?Container $instance = null;
+
     /** @var array<string, array{factory: Closure, shared: bool}> */
     private array $definitions = [];
 
@@ -39,10 +42,41 @@ class Container implements ContainerInterface
     private array $resolving = [];
 
     /**
+     * Получить глобальный экземпляр контейнера.
+     */
+    public static function getInstance(): static
+    {
+        if (self::$instance === null) {
+            self::$instance = new static();
+        }
+
+        return self::$instance;
+    }
+
+    /**
+     * Установить текущий экземпляр контейнера.
+     */
+    public static function setInstance(?Container $container): ?Container
+    {
+        return self::$instance = $container;
+    }
+
+    /**
+     * Сбросить инстанс (полезно для тестов).
+     */
+    public static function flushInstance(): void
+    {
+        self::$instance = null;
+    }
+
+    /**
      * Регистрация сервиса (каждый раз новый экземпляр).
      */
     public function bind(string $id, string|Closure|null $concrete = null): void
     {
+        // Удаляем старые инстансы, если переопределяем биндинг
+        unset($this->instances[$id]);
+
         $this->definitions[$id] = [
             'factory' => $this->normalizeConcrete($id, $concrete),
             'shared' => false,
@@ -54,6 +88,8 @@ class Container implements ContainerInterface
      */
     public function singleton(string $id, string|Closure|null $concrete = null): void
     {
+        unset($this->instances[$id]);
+
         $this->definitions[$id] = [
             'factory' => $this->normalizeConcrete($id, $concrete),
             'shared' => true,
@@ -62,7 +98,6 @@ class Container implements ContainerInterface
 
     /**
      * Регистрация готового объекта.
-     * Критически важно для прокидывания $this, $context и конфигов.
      */
     public function instance(string $id, object $instance): void
     {
@@ -71,6 +106,8 @@ class Container implements ContainerInterface
 
     /**
      * Получение сервиса (PSR-11).
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function get(string $id): mixed
     {
@@ -114,17 +151,62 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Вызов функции или метода с автоматической подстановкой зависимостей.
-     *
-     * @param callable|array|string $callable Функция для вызова
-     * @param array $parameters Ручные параметры ['name' => 'value']
+     * Вызов функции, замыкания, метода класса или invokable-класса
+     * с автоматическим внедрением зависимостей.
      */
     public function call(callable|array|string $callable, array $parameters = []): mixed
     {
+        // 1. Подготовка callable
+        $callable = $this->prepareCallable($callable);
+
+        // 2. Получение рефлексии
         $reflector = $this->getReflector($callable);
+
+        // 3. Резолвинг зависимостей
         $dependencies = $this->resolveDependencies($reflector, $parameters);
 
+        // 4. Выполнение
         return $callable(...$dependencies);
+    }
+
+    /**
+     * Превращает "сырой" хендлер в валидный PHP callable,
+     * попутно создавая объекты через контейнер.
+     */
+    private function prepareCallable(callable|array|string $callable): callable
+    {
+        // Если это строка 'Class@method' или 'Class::method' -> превращаем в массив
+        if (is_string($callable)) {
+            if (str_contains($callable, '@')) {
+                $callable = explode('@', $callable);
+            } elseif (str_contains($callable, '::')) {
+                $callable = explode('::', $callable);
+            }
+        }
+
+        // Если это массив ['Class', 'method'] или ['Class']
+        if (is_array($callable) && isset($callable[0])) {
+            $class = $callable[0];
+
+            // Если первый элемент - строка (имя класса), создаем его через контейнер!
+            if (is_string($class)) {
+                $callable[0] = $this->get($class);
+            }
+
+            // Если второго элемента не было (формат ['Class']), добавляем __invoke
+            if (!isset($callable[1])) {
+                $callable[1] = '__invoke';
+            }
+
+            return $callable; // Теперь это [$object, 'method']
+        }
+
+        // Если это просто строка 'ClassName', и такой класс существует -> Invokable
+        if (is_string($callable) && class_exists($callable)) {
+            return [$this->get($callable), '__invoke'];
+        }
+
+        return $callable;
     }
 
     /**
@@ -154,7 +236,7 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Разрешение списка зависимостей для метода или конструктора.
+     * Разрешение списка зависимостей.
      */
     private function resolveDependencies(ReflectionFunctionAbstract $method, array $manualParameters = []): array
     {
@@ -163,17 +245,16 @@ class Container implements ContainerInterface
         foreach ($method->getParameters() as $param) {
             $name = $param->getName();
 
-            // 1. Если параметр передан вручную — берем его
+            // 1. Ручные параметры
             if (array_key_exists($name, $manualParameters)) {
                 $dependencies[] = $manualParameters[$name];
                 continue;
             }
 
-            // 2. Пытаемся разрешить через контейнер
+            // 2. Через контейнер
             try {
                 $dependencies[] = $this->resolveParameter($param);
-            } catch (ContainerException $e) {
-                // Если не смогли разрешить, но есть дефолтное значение — берем его
+            } catch (ContainerExceptionInterface $e) {
                 if ($param->isDefaultValueAvailable()) {
                     $dependencies[] = $param->getDefaultValue();
                 } elseif ($param->allowsNull()) {
@@ -188,24 +269,25 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Логика разрешения одного параметра (поддержка PHP 8.0-8.4 типов).
+     * Разрешение одного параметра.
      */
     private function resolveParameter(ReflectionParameter $param): mixed
     {
         $type = $param->getType();
 
-        // Если типа нет или это примитив без дефолта — ошибка
         if (!$type) {
+            if ($this->has($param->getName())) {
+                return $this->get($param->getName());
+            }
             throw new ContainerException("Missing type hint for param [$$param->name]");
         }
 
-        // Union (A|B) или Intersection (A&B) типы
         if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
             foreach ($type->getTypes() as $subType) {
                 if ($subType instanceof ReflectionNamedType && !$subType->isBuiltin()) {
                     try {
                         return $this->get($subType->getName());
-                    } catch (NotFoundException) {
+                    } catch (ContainerExceptionInterface) {
                         continue;
                     }
                 }
@@ -213,7 +295,6 @@ class Container implements ContainerInterface
             throw new ContainerException("Cannot resolve complex type for [$$param->name]");
         }
 
-        // Обычные типы (NamedType)
         if ($type instanceof ReflectionNamedType && !$type->isBuiltin()) {
             return $this->get($type->getName());
         }
@@ -236,8 +317,17 @@ class Container implements ContainerInterface
 
     private function getReflector(callable|array|string $callable): ReflectionFunctionAbstract
     {
+        if (is_string($callable) && str_contains($callable, '::')) {
+            $callable = explode('::', $callable);
+        }
+
         if (is_array($callable)) {
             return new ReflectionMethod($callable[0], $callable[1]);
+        }
+
+        // Исправление: Поддержка объектов с __invoke
+        if (is_object($callable) && !$callable instanceof Closure) {
+            return new ReflectionMethod($callable, '__invoke');
         }
 
         return new ReflectionFunction($callable);
