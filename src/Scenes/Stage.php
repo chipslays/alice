@@ -12,13 +12,9 @@ class Stage
     /** @var array<string, Scene> */
     protected array $scenes = [];
 
-    public function __construct(
-        protected Dispatcher $dispatcher
-    ) {}
-
     public function register(string $name, Closure $callback): void
     {
-        $scene = new Scene($name, $this->dispatcher);
+        $scene = new Scene($name);
         $callback($scene);
         $this->scenes[$name] = $scene;
     }
@@ -28,29 +24,25 @@ class Stage
         return $this->scenes[$name] ?? null;
     }
 
-    // Основной метод обработки запроса
     public function dispatch(): bool
     {
         $context = Container::getInstance()->get(Context::class);
-
-        // 1. Получаем имя текущей сцены из сессии
         $currentSceneName = $context->get('state.session.$scene');
 
         if (!$currentSceneName || !isset($this->scenes[$currentSceneName])) {
-            return false; // Сцена не активна или не найдена
+            return false;
         }
 
         $scene = $this->scenes[$currentSceneName];
 
-        // 2. Делегируем обработку событий диспетчеру сцены
-        $scene->dispatch();
-
-        return true; // Сцена обработала запрос
+        return $scene->dispatch();
     }
 
     // Метод входа в сцену
-    public function enter(Context $context, string $sceneName): void
+    public function enter(string $sceneName): void
     {
+        $context = Container::getInstance()->get(Context::class);
+
         $oldSceneName = $context->get('state.session.$scene');
 
         // Если уже были в какой-то сцене — вызываем onLeave
@@ -68,8 +60,10 @@ class Stage
     }
 
     // Метод выхода
-    public function leave(Context $context): void
+    public function leave(): void
     {
+        $context = Container::getInstance()->get(Context::class);
+
         $currentSceneName = $context->get('state.session.$scene');
 
         if ($currentSceneName && isset($this->scenes[$currentSceneName])) {

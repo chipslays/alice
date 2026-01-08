@@ -18,10 +18,8 @@ class Scene
     protected ?Closure $onEnterHandler = null;
     protected ?Closure $onLeaveHandler = null;
 
-    public function __construct(
-        public readonly string $name,
-        protected readonly Dispatcher $globalDispatcher // Для доступа к контейнеру
-    ) {
+    public function __construct(public readonly string $name)
+    {
         $this->dispatcher = new Dispatcher;
     }
 
@@ -43,12 +41,15 @@ class Scene
         return $this->dispatcher;
     }
 
-    // Методы для вызова хендлеров жизненного цикла
     public function enter(): void
     {
         if ($this->onEnterHandler) {
             // Вызываем через контейнер для инъекции зависимостей
-            Container::getInstance()->call($this->onEnterHandler, ['context' => Container::getInstance()->get(Context::class), 'scene' => $this]);
+            Container::getInstance()
+                ->call($this->onEnterHandler, [
+                    'context' => Container::getInstance()->get(Context::class),
+                    'scene' => $this,
+                ]);
         }
     }
 
@@ -59,8 +60,8 @@ class Scene
         }
     }
 
-    public function dispatch(): void
+    public function dispatch(): bool
     {
-        $this->dispatcher->dispatch();
+        return $this->dispatcher->dispatch();
     }
 }

@@ -12,7 +12,12 @@ use Alice\Support\Defer;
 use Alice\Support\Render;
 use Alice\Types\Card\AbstractCard;
 use Alice\Types\Directives\AudioPlayer\AudioPlayer;
+use Alice\Types\Meta\Interfaces;
+use Alice\Types\Nlu\Entities\Entities;
+use Alice\Types\Nlu\Intents\Intents;
+use Alice\Types\Nlu\Tokens\Tokens;
 use Closure;
+use Throwable;
 
 class Alice
 {
@@ -28,9 +33,7 @@ class Alice
         $container = Container::getInstance();
         $container->instance(self::class, $this);
         $container->instance(Settings::class, $settings);
-
-        $this->stage = new Stage($this->getEventDispatcher());
-        $container->instance(Stage::class, $this->stage);
+        $container->instance(Stage::class, $this->stage = new Stage);
     }
 
     public function fake(string $json): void
@@ -47,12 +50,28 @@ class Alice
     {
         $context = $this->resolveContext();
 
+        $container = Container::getInstance();
+        $container->instance(Interfaces::class, new Interfaces($context->get('meta.interfaces', [])));
+        $container->instance(Tokens::class, new Tokens($context->get('request.nlu.tokens', [])));
+        $container->instance(Entities::class, new Entities($context->get('request.nlu.entities', [])));
+        $container->instance(Intents::class, new Intents($context->get('request.nlu.intents', [])));
+
         $this->bindServices($context);
 
-        $handledByScene = $this->stage->dispatch();
+        try {
+            $handledByScene = $this->stage->dispatch();
 
-        if (!$handledByScene) {
-            $this->getEventDispatcher()->dispatch();
+            if (!$handledByScene) {
+                $this->getEventDispatcher()->dispatch();
+            }
+        } catch (Throwable $th) {
+            // Если зарегистрирован обработчик ошибок — вызываем его
+            if ($this->errorHandler) {
+                call_user_func($this->errorHandler, $context, $th);
+            } else {
+                // Иначе выбрасываем исключение дальше
+                throw $th;
+            }
         }
 
         if (function_exists('fastcgi_finish_request')) {
@@ -98,7 +117,7 @@ class Alice
     protected function getEventDispatcher(): Dispatcher
     {
         // Передаем глобальный контейнер в диспетчер
-        return $this->eventDispatcher ??= new Dispatcher(Container::getInstance());
+        return $this->eventDispatcher ??= new Dispatcher;
     }
 
     public function reply(string $text, ?string $tts = null, array|string $buttons = [], bool $finish = false): void

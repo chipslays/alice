@@ -7,6 +7,7 @@ namespace Alice\Support;
 use ArrayAccess;
 use ArrayIterator;
 use Countable;
+use InvalidArgumentException;
 use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
@@ -288,6 +289,41 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     public function pop(): mixed
     {
         return array_pop($this->items);
+    }
+
+    /**
+     * Increment the value of an item in the collection.
+     *
+     * @param string|int $key The key of the item to increment.
+     * @param int|float $amount The amount to increment by.
+     * @return int|float The new value of the item.
+     * @throws InvalidArgumentException If the current value is not numeric.
+     */
+    public function increment(string|int $key, int|float $amount = 1): int|float
+    {
+        $value = $this->get($key, 0);
+
+        if (!is_numeric($value)) {
+            throw new InvalidArgumentException("Value for key '{$key}' is not numeric.");
+        }
+
+        $newValue = $value + $amount;
+        $this->set($key, $newValue);
+
+        return $newValue;
+    }
+
+    /**
+     * Decrement the value of an item in the collection.
+     *
+     * @param string|int $key The key of the item to decrement.
+     * @param int|float $amount The amount to decrement by.
+     * @return int|float The new value of the item.
+     * @throws InvalidArgumentException If the current value is not numeric.
+     */
+    public function decrement(string|int $key, int|float $amount = 1): int|float
+    {
+        return $this->increment($key, -$amount);
     }
 
     /**

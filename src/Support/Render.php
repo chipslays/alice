@@ -13,11 +13,9 @@ class Render
      */
     public static function process(array $value): array
     {
-        // 1. Компиляция директив (Blade-style)
         $text = self::compile($value['text'], 'text');
         $tts = self::compile($value['tts'], 'tts');
 
-        // 2. Постобработка (чистка мусора, типографика)
         return [
             'text' => self::finalize($text, 'text'),
             'tts'  => self::finalize($tts, 'tts'),
@@ -203,7 +201,7 @@ class Render
     /**
      * Финальная постобработка строки.
      */
-    private static function finalize(string $content, string $mode): string
+    public static function finalize(string $content, string $mode): string
     {
         // 1. Замена спец-кавычек <<< >>> на « »
         $content = str_replace(['<<<', '>>>'], ['«', '»'], $content);

@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "locale": "ru-RU",
+    "timezone": "UTC",
+    "client_id": "ru.yandex.quasar.services/1.0 (yandex station; android 6.0.1)",
+    "interfaces": {
+      "payments": {},
+      "account_linking": {}
+    }
+  },
+  "session": {
+    "message_id": 18,
+    "session_id": "dfa4b5be-60e5-4729-82ad-b1e7bbd14ad9",
+    "skill_id": "9cd33d95-f945-49a6-9238-e0389db96d98",
+    "user": {
+      "user_id": "479E9338F14204F228A040E5354B76601DD8A721B6F1B3AE6BBA5DADA876526D"
+    },
+    "application": {
+      "application_id": "F258C9B4482D7739549027F9903E08E9F8765A9C0C6D612CB7E2C95AAC25702C"
+    },
+    "user_id": "F258C9B4482D7739549027F9903E08E9F8765A9C0C6D612CB7E2C95AAC25702C",
+    "new": false
+  },
+  "request": {
+    "command": "повтори",
+    "original_utterance": "повтори",
+    "nlu": {
+      "tokens": [
+        "повтори"
+      ],
+      "entities": [],
+      "intents": {
+        "YANDEX.REPEAT": {
+          "slots": {}
+        }
+      }
+    },
+    "markup": {
+      "dangerous_context": false
+    },
+    "type": "SimpleUtterance"
+  },
+  "state": {
+    "session": {},
+    "user": {},
+    "application": {
+      "counter": 6
+    }
+  },
+  "version": "1.0"
+}

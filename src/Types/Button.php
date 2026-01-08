@@ -46,7 +46,7 @@ class Button
         return $this;
     }
 
-    public function hide(bool $hide = true): static
+    public function hideable(bool $hide = true): static
     {
         $this->hide = $hide;
         return $this;

@@ -79,12 +79,10 @@ $alice->fake($fakeJson);
 // Но для чистоты можно зарегистрировать singleton:
 Container::getInstance()->singleton(LoggerService::class);
 
-
 // --- 4. Регистрация Middleware и Событий ---
 
 // A. Глобальный middleware
 $alice->middleware(AuthMiddleware::class);
-
 
 // B. Обычное событие
 $alice->on(['request.command' => '/прив/i'], function (Context $p, Alice $a) {

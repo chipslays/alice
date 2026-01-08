@@ -12,6 +12,9 @@ trait Eventable
 {
     protected ?Dispatcher $eventDispatcher = null;
 
+    // Свойство для хранения обработчика ошибок
+    protected ?Closure $errorHandler = null;
+
     public function on(Closure|array|string $rules, Closure|callable|array|string $handler): Event
     {
         return $this->getEventDispatcher()->add($rules, $handler);
@@ -29,6 +32,21 @@ trait Eventable
         $this->getEventDispatcher()->pipe($middleware);
 
         return $this;
+    }
+
+    // Регистрация обработчика ошибок
+    public function onError(Closure $handler): self
+    {
+        $this->errorHandler = $handler;
+
+        return $this;
+    }
+
+    // Регистрация обработчика "по умолчанию"
+    // Сработает, если условие всегда true (и если ни одно правило выше не перехватило выполнение)
+    public function onFallback(Closure|array|string $handler): Event
+    {
+        return $this->on(function() { return true; }, $handler);
     }
 
     abstract protected function getEventDispatcher(): Dispatcher;
@@ -54,7 +72,7 @@ trait Eventable
 
     public function onAction(array|string $action, Closure|array|string $handler): Event
     {
-        return $this->on(['request.payload.__action__' => $action], $handler);
+        return $this->on(['request.payload.$action' => $action], $handler);
     }
 
     public function onAny(Closure|array|string $handler): Event
@@ -66,7 +84,7 @@ trait Eventable
     {
         $rule = function (Context $context) use ($id): bool {
             return (bool) array_intersect((array) $id, array_keys(
-                $context->request->get('request.nlu.intents')->toArray()
+                $context->get('request.nlu.intents')
             ));
         };
 

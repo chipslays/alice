@@ -7,6 +7,8 @@ use Alice\Support\Collection;
 class Settings extends Collection
 {
     protected $default = [
+        'skill_id' => null,
+        'oauth_token' => null,
         'storage_path' => null,
         'assets' => [],
         'buttons' => [],

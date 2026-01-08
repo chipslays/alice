@@ -47,16 +47,14 @@ class Dispatcher
         return $event;
     }
 
-    public function dispatch(): void
+    public function dispatch(): bool
     {
         $pipeline = new Pipeline;
-
         $context = Container::getInstance()->get(Context::class);
+        $handled = false; // Флаг обработки
 
         foreach ($this->listeners as $event) {
-            // Передаем контекст в matches для проверки правил
             if ($this->matches($event->rules, $context)) {
-
                 $middlewares = array_merge($this->globalMiddleware, $event->middleware);
 
                 $destination = function ($context) use ($event) {
@@ -69,9 +67,12 @@ class Dispatcher
                     ->through($middlewares)
                     ->then($destination);
 
+                $handled = true;
                 break;
             }
         }
+
+        return $handled;
     }
 
     // --- ОБНОВЛЕННАЯ ЛОГИКА MATCHES ---
