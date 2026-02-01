@@ -15,6 +15,14 @@ class ImageGallery extends AbstractCard
         'items' => [],
     ];
 
+    /**
+     * Добавляет изображение в галерею.
+     *
+     * @param string $imageId Идентификатор изображения
+     * @param string $title Заголовок изображения
+     * @param Button|string|null $button Кнопка или её представление
+     * @return static
+     */
     public function add(string $imageId, string $title, Button|string|null $button = null): static
     {
         $this->card['items'][] = [

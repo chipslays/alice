@@ -2,6 +2,9 @@
 
 namespace Alice\Types\Directives\AudioPlayer;
 
+/**
+ * Метаданные для AudioPlayer (title, sub_title, art, background_image).
+ */
 class Metadata
 {
     protected array $meta = [
@@ -37,6 +40,11 @@ class Metadata
         ];
     }
 
+    /**
+     * Преобразовать метаданные в массив.
+     *
+     * @return array
+     */
     public function toArray(): array
     {
         return $this->meta;

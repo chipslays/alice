@@ -17,9 +17,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     protected array $items = [];
 
     /**
-     * Initialize a new Collection instance.
+     * Создаёт новый экземпляр коллекции.
      *
-     * @param array $items The initial items of the collection.
+     * @param array $items Начальные элементы коллекции
      */
     public function __construct(array $items = [])
     {
@@ -27,7 +27,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Return all items of the collection.
+     * Вернуть все элементы коллекции.
      *
      * @return array
      */
@@ -37,15 +37,13 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Retrieve an item from the collection by its key.
+     * Получить элемент коллекции по ключу.
      *
-     * If the key contains a dot (.), it will be treated as a nested key.
-     * Otherwise, it will be treated as a top-level key.
+     * Поддерживает вложенные ключи через точку.
      *
-     * @param string|int $key The key of the item to retrieve.
-     * @param mixed $default The default value to return if the item is not found.
-     *
-     * @return mixed The retrieved item, or the default value if not found.
+     * @param string|int $key Ключ элемента
+     * @param mixed $default Значение по умолчанию
+     * @return mixed
      */
     public function get(string|int $key, mixed $default = null): mixed
     {
@@ -70,15 +68,13 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Set an item in the collection by its key.
+     * Установить значение по ключу в коллекции.
      *
-     * If the key contains a dot (.), it will be treated as a nested key.
-     * Otherwise, it will be treated as a top-level key.
+     * Поддерживает вложенные ключи через точку.
      *
-     * @param string|int $key The key of the item to set.
-     * @param mixed $value The value of the item to set.
-     *
-     * @return static The instance of the collection after setting the item.
+     * @param string|int $key
+     * @param mixed $value
+     * @return static
      */
     public function set(string|int $key, mixed $value): static
     {
@@ -110,14 +106,12 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Checks if an item exists in the collection by its key.
+     * Проверяет существование элемента по ключу.
      *
-     * If the key contains a dot (.), it will be treated as a nested key.
-     * Otherwise, it will be treated as a top-level key.
+     * Поддерживает вложенные ключи через точку.
      *
-     * @param string|int $key The key of the item to check.
-     *
-     * @return bool True if the item exists, false otherwise.
+     * @param string|int $key
+     * @return bool
      */
     public function has(string|int $key): bool
     {
@@ -142,14 +136,12 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Removes an item from the collection by its key.
+     * Удаляет элемент по ключу.
      *
-     * If the key contains a dot (.), it will be treated as a nested key.
-     * Otherwise, it will be treated as a top-level key.
+     * Поддерживает вложенные ключи через точку.
      *
-     * @param string|int $key The key of the item to remove.
-     *
-     * @return static The current collection instance.
+     * @param string|int $key
+     * @return static
      */
     public function remove(string|int $key): static
     {
@@ -177,9 +169,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Clears the collection, effectively removing all items.
+     * Очищает коллекцию от всех элементов.
      *
-     * @return static The current collection instance.
+     * @return static
      */
     public function clear(): static
     {
@@ -188,15 +180,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Merges the given items into the current collection.
+     * Сливает переданные элементы в текущую коллекцию (array_replace_recursive).
      *
-     * The items are merged using the `array_replace_recursive` function,
-     * which means that if an item with the same key already exists in the collection,
-     * it will be replaced with the new item.
-     *
-     * @param array $items The items to merge into the collection.
-     *
-     * @return static The current collection instance.
+     * @param array $items
+     * @return static
      */
     public function merge(array $items): static
     {
@@ -205,14 +192,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Maps the given callback function to each item in the collection.
+     * Применяет callback ко всем элементам коллекции и возвращает новую коллекцию.
      *
-     * The callback function will receive each item as its first argument.
-     * The returned value will replace the original item in the collection.
-     *
-     * @param callable $callback The callback function to apply to each item.
-     *
-     * @return static The current collection instance with the mapped items.
+     * @param callable $callback
+     * @return static
      */
     public function map(callable $callback): static
     {
@@ -220,15 +203,13 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Filters the items in the collection using the given callback function.
+     * Отфильтровывает элементы коллекции с помощью callback-функции.
      *
-     * The callback function will receive each item as its first argument.
-     * If the callback function returns a truthy value, the item will be included in the filtered collection.
-     * If the callback function returns a falsey value, the item will be excluded from the filtered collection.
+     * Callback получает значение элемента и его ключ. Если функция возвращает истинное
+     * значение — элемент остается в результирующей коллекции.
      *
-     * @param callable $callback The callback function to apply to each item.
-     *
-     * @return static The filtered collection instance.
+     * @param callable $callback Функция фильтрации
+     * @return static
      */
     public function filter(callable $callback): static
     {
@@ -236,19 +217,11 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns the first item in the collection that satisfies the given callback function.
+     * Возвращает первый элемент, удовлетворяющий callback, или первый элемент коллекции.
      *
-     * If no callback function is given, the first item in the collection is returned.
-     * If the collection is empty, the given default value is returned.
-     *
-     * The callback function will receive each item as its first argument and its key as its second argument.
-     * If the callback function returns a truthy value, the item is returned.
-     * If the callback function returns a falsey value, the next item is tested.
-     *
-     * @param callable|null $callback The callback function to apply to each item.
-     * @param mixed $default The default value to return if no item satisfies the callback or if the collection is empty.
-     *
-     * @return mixed The first item that satisfies the callback or the default value if no item does.
+     * @param callable|null $callback
+     * @param mixed $default
+     * @return mixed
      */
     public function first(?callable $callback = null, mixed $default = null): mixed
     {
@@ -269,11 +242,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Pushes the given value onto the end of the collection.
+     * Добавляет элемент в конец коллекции.
      *
-     * @param mixed $value The value to push onto the end of the collection.
-     *
-     * @return static The current collection instance with the pushed value.
+     * @param mixed $value
+     * @return static
      */
     public function push(mixed $value): static
     {
@@ -282,9 +254,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Removes and returns the last item in the collection.
+     * Удаляет и возвращает последний элемент коллекции.
      *
-     * @return mixed The last item in the collection.
+     * @return mixed
      */
     public function pop(): mixed
     {
@@ -292,12 +264,12 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Increment the value of an item in the collection.
+     * Увеличивает числовое значение элемента коллекции.
      *
-     * @param string|int $key The key of the item to increment.
-     * @param int|float $amount The amount to increment by.
-     * @return int|float The new value of the item.
-     * @throws InvalidArgumentException If the current value is not numeric.
+     * @param string|int $key Ключ элемента
+     * @param int|float $amount Величина инкремента
+     * @return int|float Новое значение элемента
+     * @throws InvalidArgumentException Если текущее значение не является числом
      */
     public function increment(string|int $key, int|float $amount = 1): int|float
     {
@@ -314,12 +286,12 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Decrement the value of an item in the collection.
+     * Уменьшает числовое значение элемента коллекции.
      *
-     * @param string|int $key The key of the item to decrement.
-     * @param int|float $amount The amount to decrement by.
-     * @return int|float The new value of the item.
-     * @throws InvalidArgumentException If the current value is not numeric.
+     * @param string|int $key Ключ элемента
+     * @param int|float $amount Величина декремента
+     * @return int|float Новое значение элемента
+     * @throws InvalidArgumentException Если текущее значение не является числом
      */
     public function decrement(string|int $key, int|float $amount = 1): int|float
     {
@@ -327,12 +299,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns an array representation of the current collection.
+     * Преобразовать коллекцию в массив (рекурсивно вызывая toArray у вложенных коллекций).
      *
-     * Recursively calls toArray on all child collections and returns
-     * the array representation of the collection.
-     *
-     * @return array The array representation of the current collection.
+     * @return array
      */
     public function toArray(): array
     {
@@ -342,9 +311,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns the number of items in the collection.
+     * Количество элементов в коллекции.
      *
-     * @return int The number of items in the collection.
+     * @return int
      */
     public function count(): int
     {
@@ -352,9 +321,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns an iterator for the current collection.
+     * Возвращает итератор для коллекции.
      *
-     * @return Traversable The iterator for the current collection.
+     * @return Traversable
      */
     public function getIterator(): Traversable
     {
@@ -362,11 +331,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Checks if a given offset exists.
+     * Проверяет существование значения по смещению (offset).
      *
-     * @param mixed $offset The offset to check
-     *
-     * @return bool True if the offset exists, false otherwise
+     * @param mixed $offset Смещение (ключ)
+     * @return bool
      */
     public function offsetExists(mixed $offset): bool
     {
@@ -374,11 +342,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Retrieves the value associated with the given offset.
+     * Получить значение по смещению (offset).
      *
-     * @param mixed $offset The offset to retrieve
-     *
-     * @return mixed The value associated with the given offset
+     * @param mixed $offset
+     * @return mixed
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -386,13 +353,14 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Sets the value associated with the given offset.
+     * Устанавливает значение по смещению (offset).
      *
-     * If the offset is null, the value is appended to the current collection.
-     * Otherwise, the value is set at the given offset.
+     * Если `$offset` равен null — значение будет добавлено в конец коллекции,
+     * иначе — установлено по указанному ключу.
      *
-     * @param mixed $offset The offset to set
-     * @param mixed $value The value to set
+     * @param mixed $offset Смещение (ключ) или null для добавления
+     * @param mixed $value Устанавливаемое значение
+     * @return void
      */
     public function offsetSet(mixed $offset, mixed $value): void
     {
@@ -404,9 +372,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Removes the value associated with the given offset.
+     * Удаляет значение по смещению (offset).
      *
-     * @param mixed $offset The offset to remove
+     * @param mixed $offset Смещение (ключ)
+     * @return void
      */
     public function offsetUnset(mixed $offset): void
     {
@@ -416,7 +385,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * {@inheritDoc}
      *
-     * Returns the collection as an array that can be serialized to JSON.
+     * Преобразует коллекцию в массив, пригодный для сериализации в JSON.
+     *
+     * @return array
      */
     public function jsonSerialize(): array
     {
@@ -424,11 +395,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns the collection as a JSON string.
+     * Преобразовать коллекцию в JSON строку.
      *
-     * @param int $options The JSON encoding options to use
-     *
-     * @return string The collection as a JSON string
+     * @param int $options Опции кодирования JSON
+     * @return string
      */
     public function toJson(int $options = 0): string
     {
@@ -436,11 +406,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Returns the collection as a JSON string.
+     * Преобразовать коллекцию в JSON при приведении к строке.
      *
-     * This method is invoked when the object is treated like a string.
-     *
-     * @return string The collection as a JSON string
+     * @return string
      */
     public function __toString(): string
     {
@@ -448,11 +416,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Magic getter to access items in the collection.
+     * Магический геттер для доступа к элементам коллекции.
      *
-     * @param string $key The key of the item to access
-     *
-     * @return mixed The value associated with the given key
+     * @param string $key
+     * @return mixed
      */
     public function __get(string $key): mixed
     {
@@ -460,10 +427,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Magic setter to set items in the collection.
+     * Магический сеттер для установки значения по ключу.
      *
-     * @param string $key The key of the item to set
-     * @param mixed $value The value to set for the given key
+     * @param string $key
+     * @param mixed $value
      */
     public function __set(string $key, mixed $value): void
     {
@@ -471,14 +438,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Checks if an item exists in the collection by its key.
+     * Проверяет существование ключа (используется при isset()/empty()).
      *
-     * This method is invoked when checking if a property is set, either via
-     * `isset($collection->key)` or `empty($collection->key)`.
-     *
-     * @param string $key The key of the item to check
-     *
-     * @return bool True if the item exists, false otherwise
+     * @param string $key
+     * @return bool
      */
     public function __isset(string $key): bool
     {
@@ -486,13 +449,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
-     * Magic unset to remove items from the collection.
+     * Магический unset для удаления элемента.
      *
-     * This method is invoked when unsetting a property, either via
-     * `unset($collection->key)` or via a property being unset in a
-     * foreach loop.
-     *
-     * @param string $key The key of the item to remove
+     * @param string $key
      */
     public function __unset(string $key): void
     {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Alice\Support;
 
+/**
+ * Очередь отложенных задач (deferred callbacks), выполняется в порядке приоритета.
+ */
 class Defer
 {
     /**

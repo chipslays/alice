@@ -9,6 +9,9 @@ use Alice\Context;
 use Alice\Support\Container;
 use Closure;
 
+/**
+ * Диспетчер событий с поддержкой middleware, групп и правил соответствия.
+ */
 class Dispatcher
 {
     /** @var Event[] */
@@ -20,6 +23,12 @@ class Dispatcher
     /** @var array */
     protected array $globalMiddleware = [];
 
+    /**
+     * Добавляет глобальный middleware.
+     *
+     * @param string|Closure|array $middleware
+     * @return $this
+     */
     public function pipe(string|Closure|array $middleware): self
     {
         $middlewares = is_array($middleware) ? $middleware : [$middleware];
@@ -27,6 +36,12 @@ class Dispatcher
         return $this;
     }
 
+    /**
+     * Группирует события, возвращая объект Group.
+     *
+     * @param Closure $callback
+     * @return Group
+     */
     public function group(Closure $callback): Group
     {
         $startIndex = count($this->listeners);
@@ -35,6 +50,13 @@ class Dispatcher
         return new Group($newEvents);
     }
 
+    /**
+     * Регистрирует событие с правилами и обработчиком.
+     *
+     * @param Closure|array|string $rules
+     * @param Closure|callable|array|string $handler
+     * @return Event
+     */
     public function add(Closure|array|string $rules, Closure|callable|array|string $handler): Event
     {
         $event = new Event($rules, $handler);
@@ -47,6 +69,11 @@ class Dispatcher
         return $event;
     }
 
+    /**
+     * Обходит зарегистрированные события и выполняет первое подходящее через Pipeline.
+     *
+     * @return bool true, если событие обработано
+     */
     public function dispatch(): bool
     {
         $pipeline = new Pipeline;

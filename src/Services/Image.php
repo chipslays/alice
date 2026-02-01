@@ -5,6 +5,11 @@ namespace Alice\Services;
 use CURLFile;
 use CurlHandle;
 
+/**
+ * Сервис для загрузки и управления изображениями в Yandex Dialogs.
+ *
+ * Предоставляет методы для статуса, загрузки (файла или по URL), удаления и кеширования.
+ */
 class Image
 {
     protected string $host = 'https://dialogs.yandex.net';
@@ -13,6 +18,11 @@ class Image
 
     protected array $oncedData = [];
 
+    /**
+     * @param string $token Токен OAuth
+     * @param string $skillId Идентификатор навыка
+     * @param string|null $path Путь для локального кеша
+     */
     public function __construct(protected string $token, protected string $skillId, protected ?string $path = null)
     {
         $path ??= sys_get_temp_dir() . '/alice';
@@ -92,16 +102,14 @@ class Image
     }
 
     /**
-     * Загрузить локльное изображение или по ссылке.
+     * Загрузить локальное изображение или по URL.
      *
-     * Если изображение уже было загружено и закешировано,
-     * то вернет результат из кеша.
+     * Если изображение уже было загружено и закешировано — вернётся значение из кеша.
+     * Чтобы исключить кеширование, установите `$cache` в false.
      *
-     * Чтобы исключить кеш, укажите параметр `cache` как `false`.
-     *
-     * @param string $image
-     * @param boolean $cache
-     * @return string|null
+     * @param string $image Путь к файлу или URL
+     * @param bool $cache Использовать кеш
+     * @return string|null Идентификатор изображения или null при ошибке
      */
     public function upload(string $image, bool $cache = true): ?string
     {
@@ -132,18 +140,14 @@ class Image
     }
 
     /**
-     * Отправить картинку только один раз.
+     * Загрузить изображение единоразово (после использования удалится из Dialogs).
      *
-     * После отправки изображение будет сразу удалено из Диалогов и кеша.
+     * Если изображение уже было закешировано — вернётся значение из кеша.
+     * Чтобы исключить кеширование, установите `$cache` в false.
      *
-     * Если изображение уже было загружено и закешировано,
-     * то возьем изображение из кеша.
-     *
-     * Чтобы исключить кеш, укажите параметр `cache` как `false`.
-     *
-     * @param string $image
-     * @param boolean $cache
-     * @return string|null
+     * @param string $image Путь к файлу или URL
+     * @param bool $cache Использовать кеш
+     * @return string|null Идентификатор изображения или null при ошибке
      */
     public function once(string $image, bool $cache = true): ?string
     {
@@ -243,6 +247,11 @@ class Image
         return json_decode($response, true);
     }
 
+    /**
+     * Деструктор: удаляет одноразовые ресурсы (once-uploaded) и очищает кеш, если требуется.
+     *
+     * @return void
+     */
     public  function __destruct()
     {
         foreach ($this->oncedData as $id => $item) {

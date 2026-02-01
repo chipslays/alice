@@ -14,6 +14,12 @@ class Storage
 {
     protected string $directory;
 
+    /**
+     * Конструктор. Инициализирует директорию хранения; если путь не указан —
+     * используется временная директория по умолчанию для текущего skill.
+     *
+     * @param string|null $path Путь к директории хранения
+     */
     public function __construct(?string $path = null)
     {
         if ($path === null) {

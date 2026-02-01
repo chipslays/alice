@@ -15,6 +15,11 @@ class ItemsList extends AbstractCard
         'items' => [],
     ];
 
+    /**
+     * Установить заголовок списка.
+     * @param string $text
+     * @return static
+     */
     public function header(string $text): static
     {
         $this->card['header']['text'] = $text;
@@ -22,6 +27,14 @@ class ItemsList extends AbstractCard
         return $this;
     }
 
+    /**
+     * Добавить элемент в список.
+     * @param string $imageId
+     * @param string|null $title
+     * @param string|null $description
+     * @param Button|string|null $button
+     * @return static
+     */
     public function add(string $imageId, ?string $title = null, ?string $description = null, Button|string|null $button = null): static
     {
         $this->card['items'][] = [
@@ -34,6 +47,12 @@ class ItemsList extends AbstractCard
         return $this;
     }
 
+    /**
+     * Установить футер списка.
+     * @param string $text
+     * @param Button|string|null $button
+     * @return static
+     */
     public function footer(string $text, Button|string|null $button = null): static
     {
         $this->card['footer']['text'] = $text;

@@ -8,6 +8,14 @@ class Button
 {
     protected string $text;
 
+    /**
+     * Конструктор кнопки карточки.
+     *
+     * @param string|array $text Текст кнопки или варианты
+     * @param string|null $action Действие
+     * @param array $payload Нагрузочный payload
+     * @param string|null $url Ссылка
+     */
     public function __construct(
         string|array $text,
         protected ?string $action = null,
@@ -24,6 +32,11 @@ class Button
         $this->text = $rendered['text'];
     }
 
+    /**
+     * Установить действие кнопки.
+     * @param string $action
+     * @return static
+     */
     public function action(string $action): static
     {
         $this->action = $action;
@@ -31,6 +44,11 @@ class Button
         return $this;
     }
 
+    /**
+     * Установить URL для кнопки.
+     * @param string|null $url
+     * @return static
+     */
     public function url(?string $url = null): static
     {
         $this->url = $url;
@@ -38,6 +56,11 @@ class Button
         return $this;
     }
 
+    /**
+     * Установить payload для кнопки.
+     * @param array $payload
+     * @return static
+     */
     public function payload(array $payload): static
     {
         $this->payload = $payload;
@@ -45,6 +68,10 @@ class Button
         return $this;
     }
 
+    /**
+     * Преобразовать кнопку в массив.
+     * @return array
+     */
     public function toArray(): array
     {
         $button = [

@@ -19,14 +19,34 @@ use Alice\Types\Nlu\Tokens\Tokens;
 use Closure;
 use Throwable;
 
+/**
+ * Main Alice application orchestrator.
+ *
+ * Отвечает за разрешение контекста, регистрацию сцен и запуск обработки запроса.
+ */
 class Alice
 {
     use Eventable;
 
+    /**
+     * Фейковый контекст, используемый в тестах.
+     *
+     * @var Context|null
+     */
     protected ?Context $fakeContext = null;
 
+    /**
+     * Слой сцен для регистрации и выполнения логики диалога.
+     *
+     * @var Stage
+     */
     protected Stage $stage;
 
+    /**
+     * Создает экземпляр Alice и регистрирует основные сервисы в контейнере.
+     *
+     * @param Settings $settings Настройки приложения
+     */
     public function __construct(
         public readonly Settings $settings = new Settings
     ) {
@@ -36,16 +56,36 @@ class Alice
         $container->instance(Stage::class, $this->stage = new Stage);
     }
 
+    /**
+     * Устанавливает фейковый контекст из JSON (для тестирования).
+     *
+     * @param string $json JSON-строка с контекстом запроса
+     * @return void
+     */
     public function fake(string $json): void
     {
         $this->fakeContext = new Context(json_decode($json, true));
     }
 
+    /**
+     * Регистрирует обработчик сцены по имени.
+     *
+     * @param string  $name     Имя сцены
+     * @param Closure $callback Колбэк, выполняемый при входе в сцену
+     * @return void
+     */
     public function onScene(string $name, Closure $callback): void
     {
         $this->stage->register($name, $callback);
     }
 
+    /**
+     * Обрабатывает входящий запрос: разрешает контекст, биндет сервисы и
+     * выполняет сцену или диспатчер событий. Выполняет отложенные задачи в конце.
+     *
+     * @return void
+     * @throws Throwable Если не зарегистрирован обработчик ошибок и возникло исключение
+     */
     public function dispatch(): void
     {
         $context = $this->resolveContext();
@@ -81,11 +121,22 @@ class Alice
         Defer::run();
     }
 
+    /**
+     * Возвращает текущий контекст запроса; если установлен фейковый контекст — возвращает его.
+     *
+     * @return Context
+     */
     protected function resolveContext(): Context
     {
         return $this->fakeContext ?? $this->captureRequest();
     }
 
+    /**
+     * Регистрирует в контейнере контекст и объекты состояния (application, session, user).
+     *
+     * @param Context $context
+     * @return void
+     */
     protected function bindServices(Context $context): void
     {
         $container = Container::getInstance();
@@ -108,18 +159,37 @@ class Alice
         );
     }
 
+    /**
+     * Читает сырой ввод из php://input и преобразует его в объект Context.
+     *
+     * @return Context
+     */
     protected function captureRequest(): Context
     {
         $input = file_get_contents('php://input');
         return new Context(json_decode($input, true) ?? []);
     }
 
+    /**
+     * Возвращает экземпляр диспетчера событий, создавая его при необходимости.
+     *
+     * @return Dispatcher
+     */
     protected function getEventDispatcher(): Dispatcher
     {
         // Передаем глобальный контейнер в диспетчер
         return $this->eventDispatcher ??= new Dispatcher;
     }
 
+    /**
+     * Отправляет текстовый ответ с опциональными кнопками и tts.
+     *
+     * @param string          $text    Основной текст ответа
+     * @param string|null     $tts     TTS-версия текста (по умолчанию равна $text)
+     * @param array|string    $buttons Массив или строка с кнопками
+     * @param bool            $finish  Завершать ли сессию после ответа
+     * @return void
+     */
     public function reply(string $text, ?string $tts = null, array|string $buttons = [], bool $finish = false): void
     {
         $processed = Render::process([
@@ -134,6 +204,15 @@ class Alice
             ->finish($finish);
     }
 
+    /**
+     * Отправляет ответ с карточкой или AudioPlayer, с опциональным текстом и tts.
+     *
+     * @param AbstractCard|AudioPlayer $type   Карточка или плеер для ответа
+     * @param string                   $text   Основной текст ответа
+     * @param string|null              $tts    TTS-версия текста (по умолчанию равна $text)
+     * @param bool                     $finish Завершать ли сессию после ответа
+     * @return void
+     */
     public function replyWith(AbstractCard|AudioPlayer $type, string $text = '', ?string $tts = null, bool $finish = false): void
     {
         $processed = Render::process([

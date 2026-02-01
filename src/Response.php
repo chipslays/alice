@@ -6,6 +6,12 @@ use Alice\State\Application;
 use Alice\State\Session;
 use Alice\State\User;
 use Alice\Support\Buttons;
+
+/**
+ * Формирует ответ навыка в формате, ожидаемом внешней платформой.
+ *
+ * Отвечает за текст, tts, кнопки, карточки, directives и сериализацию в JSON.
+ */
 use Alice\Support\Container;
 use Alice\Types\Button;
 use Alice\Types\Card\AbstractCard;
@@ -22,6 +28,12 @@ class Response
         'version' => '1.0',
     ];
 
+    /**
+     * Устанавливает текст ответа.
+     *
+     * @param string $text Текст ответа
+     * @return static
+     */
     public function text(string $text): static
     {
         $this->response['response']['text'] = $text;
@@ -29,6 +41,12 @@ class Response
         return $this;
     }
 
+    /**
+     * Устанавливает TTS-версию текста.
+     *
+     * @param string $tts Текст для синтеза речи
+     * @return static
+     */
     public function tts(string $tts): static
     {
         $this->response['response']['tts'] = $tts;
@@ -37,7 +55,10 @@ class Response
     }
 
     /**
-     * @param array|string $buttons
+     * Добавляет кнопки к ответу.
+     *
+     * @param array|string $buttons Массив кнопок или ключ из настроек buttons
+     * @return static
      */
     public function withButtons(array|string $buttons): static
     {
@@ -67,6 +88,12 @@ class Response
         );
     }
 
+    /**
+     * Добавляет карточку к ответу.
+     *
+     * @param AbstractCard $card
+     * @return static
+     */
     public function withCard(AbstractCard $card): static
     {
         $this->with([
@@ -78,6 +105,12 @@ class Response
         return $this;
     }
 
+    /**
+     * Добавляет AudioPlayer директиву к ответу.
+     *
+     * @param AudioPlayer $player
+     * @return static
+     */
     public function withAudioPlayer(AudioPlayer $player): static
     {
         $this->with([
@@ -92,6 +125,12 @@ class Response
         return $this;
     }
 
+    /**
+     * Мержит дополнительные данные в ответ.
+     *
+     * @param array $data Дополнительные данные для объединения
+     * @return static
+     */
     public function with(array $data = []): static
     {
         array_replace_recursive($this->response, $data);
@@ -99,6 +138,12 @@ class Response
         return $this;
     }
 
+    /**
+     * Устанавливает флаг завершения сессии.
+     *
+     * @param bool $value Завершать ли сессию
+     * @return static
+     */
     public function finish(bool $value = true): static
     {
         $this->response['response']['end_session'] = $value;
@@ -106,6 +151,11 @@ class Response
         return $this;
     }
 
+    /**
+     * Быстрый метод для отправки pong-ответа (диагностика).
+     *
+     * @return static
+     */
     public function pong(): static
     {
         return $this

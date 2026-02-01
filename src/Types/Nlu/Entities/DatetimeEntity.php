@@ -8,6 +8,11 @@ use DateTimeZone;
 
 class DatetimeEntity extends Entity
 {
+    /**
+     * Возвращает год из сущности даты (или null).
+     *
+     * @return string|null
+     */
     public function year(): ?string
     {
         if (
@@ -20,6 +25,11 @@ class DatetimeEntity extends Entity
         return $this->data['value']['year'] ?? null;
     }
 
+    /**
+     * Возвращает месяц из сущности даты (1-12) или null.
+     *
+     * @return string|null
+     */
     public function month(): ?string
     {
         if (
@@ -32,6 +42,11 @@ class DatetimeEntity extends Entity
         return $this->data['value']['month'] ?? null;
     }
 
+    /**
+     * Возвращает день месяца из сущности даты или null.
+     *
+     * @return string|null
+     */
     public function day(): ?string
     {
         if (
@@ -44,6 +59,11 @@ class DatetimeEntity extends Entity
         return $this->data['value']['day'] ?? null;
     }
 
+    /**
+     * Возвращает час из сущности даты (0-23) или null.
+     *
+     * @return string|null
+     */
     public function hour(): ?string
     {
         if (
@@ -56,6 +76,11 @@ class DatetimeEntity extends Entity
         return $this->data['value']['hour'] ?? null;
     }
 
+    /**
+     * Возвращает минуту из сущности даты или null.
+     *
+     * @return string|null
+     */
     public function minute(): ?string
     {
         if (
@@ -68,6 +93,18 @@ class DatetimeEntity extends Entity
         return $this->data['value']['minute'] ?? null;
     }
 
+    /**
+     * Преобразует сущность в объект DateTime, используя доступные поля и переданные
+     * значения по умолчанию.
+     *
+     * @param string|null $year Год
+     * @param string|null $month Месяц
+     * @param string|null $day День
+     * @param string|null $hour Час
+     * @param string|null $minute Минута
+     * @param string|null $timezone Таймзона
+     * @return DateTime
+     */
     public function toDateTime(
         ?string $year = null,
         ?string $month = null,

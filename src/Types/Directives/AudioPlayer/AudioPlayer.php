@@ -4,6 +4,9 @@ namespace Alice\Types\Directives\AudioPlayer;
 
 use Alice\Types\Directives\Directive;
 
+/**
+ * Directive для управления AudioPlayer (Play/Stop) и автозапуска.
+ */
 class AudioPlayer extends Directive
 {
     protected array $directive = [
@@ -12,6 +15,14 @@ class AudioPlayer extends Directive
 
     public protected(set) bool $autoplay = false;
 
+    /**
+     * Включить воспроизведение стрима.
+     *
+     * @param Stream|string $stream URL или Stream
+     * @param Metadata|null $meta Доп. метаданные (текст, арт)
+     * @param bool $autoplay Автозапуск
+     * @return static
+     */
     public function play(Stream|string $stream, ?Metadata $meta = null, bool $autoplay = false): static
     {
         $this->autoplay = $autoplay;
@@ -26,6 +37,11 @@ class AudioPlayer extends Directive
         return $this;
     }
 
+    /**
+     * Остановить воспроизведение.
+     *
+     * @return static
+     */
     public function stop(): static
     {
         $this->directive['action'] = 'Stop';

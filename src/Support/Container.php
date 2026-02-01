@@ -25,6 +25,9 @@ use ReflectionIntersectionType;
 class ContainerException extends Exception implements ContainerExceptionInterface {}
 class NotFoundException extends ContainerException implements NotFoundExceptionInterface {}
 
+/**
+ * Простой DI-контейнер с поддержкой singleton/bind/instance и автозависимостей через Reflection.
+ */
 class Container implements ContainerInterface
 {
     /**
@@ -44,6 +47,11 @@ class Container implements ContainerInterface
     /**
      * Получить глобальный экземпляр контейнера.
      */
+    /**
+     * Получить глобальный экземпляр контейнера.
+     *
+     * @return static
+     */
     public static function getInstance(): static
     {
         if (self::$instance === null) {
@@ -54,7 +62,10 @@ class Container implements ContainerInterface
     }
 
     /**
-     * Установить текущий экземпляр контейнера.
+     * Установить текущий экземпляр контейнера (полезно в тестах).
+     *
+     * @param Container|null $container
+     * @return Container|null
      */
     public static function setInstance(?Container $container): ?Container
     {
@@ -63,6 +74,8 @@ class Container implements ContainerInterface
 
     /**
      * Сбросить инстанс (полезно для тестов).
+     *
+     * @return void
      */
     public static function flushInstance(): void
     {
@@ -71,6 +84,10 @@ class Container implements ContainerInterface
 
     /**
      * Регистрация сервиса (каждый раз новый экземпляр).
+     *
+     * @param string $id
+     * @param string|Closure|null $concrete
+     * @return void
      */
     public function bind(string $id, string|Closure|null $concrete = null): void
     {
@@ -109,6 +126,14 @@ class Container implements ContainerInterface
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface
      */
+    /**
+     * Получение сервиса (PSR-11).
+     *
+     * @param string $id
+     * @return mixed
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     */
     public function get(string $id): mixed
     {
         // 1. Если уже есть готовый инстанс — возвращаем
@@ -143,6 +168,12 @@ class Container implements ContainerInterface
         return $this->resolve($id);
     }
 
+    /**
+     * Проверяет, зарегистрирован ли сервис в контейнере или существует ли класс.
+     *
+     * @param string $id Идентификатор сервиса или имя класса
+     * @return bool
+     */
     public function has(string $id): bool
     {
         return isset($this->instances[$id])

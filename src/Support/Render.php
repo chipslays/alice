@@ -6,10 +6,16 @@ namespace Alice\Support;
 
 use Alice\Support\Assets;
 
+/**
+ * Утилита рендеринга и обработки директив в тексте/tts.
+ */
 class Render
 {
     /**
-     * Точка входа.
+     * Обрабатывает текст и tts, применяет директивы и финализацию.
+     *
+     * @param array $value ['text' => string, 'tts' => string]
+     * @return array ['text' => string, 'tts' => string]
      */
     public static function process(array $value): array
     {

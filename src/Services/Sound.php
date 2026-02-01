@@ -5,6 +5,11 @@ namespace Alice\Services;
 use CURLFile;
 use CurlHandle;
 
+/**
+ * Сервис для загрузки и управления звуками в Yandex Dialogs.
+ *
+ * Предоставляет методы для статуса, загрузки (файла или по URL), удаления и кеширования.
+ */
 class Sound
 {
     protected string $host = 'https://dialogs.yandex.net';
@@ -13,6 +18,11 @@ class Sound
 
     protected array $oncedData = [];
 
+    /**
+     * @param string $token Токен OAuth
+     * @param string $skillId Идентификатор навыка
+     * @param string|null $path Путь для локального кеша
+     */
     public function __construct(protected string $token, protected string $skillId, protected ?string $path = null)
     {
         $path ??= sys_get_temp_dir() . '/alice';
@@ -92,16 +102,14 @@ class Sound
     }
 
     /**
-     * Загрузить локльный звук или по ссылке.
+     * Загрузить локальный звук или по URL.
      *
-     * Если звук уже был загружен и закеширован,
-     * то вернет результат из кеша.
+     * Если звук уже был загружен и закеширован — вернётся значение из кеша.
+     * Чтобы исключить кеширование, установите `$cache` в false.
      *
-     * Чтобы исключить кеш, укажите параметр `cache` как `false`.
-     *
-     * @param string $sound
-     * @param boolean $cache
-     * @return string|null
+     * @param string $sound Путь к файлу или URL
+     * @param bool $cache Использовать кеш
+     * @return string|null Идентификатор звука или null при ошибке
      */
     public function upload(string $sound, bool $cache = true): ?string
     {
@@ -132,8 +140,9 @@ class Sound
     }
 
     /**
-     * Undocumented function
-     * @param string $sound
+     * Получить метаданные о звуке.
+     *
+     * @param string $sound Идентификатор или имя ресурса
      * @return array
      */
     public function info(string $sound): array
@@ -236,12 +245,17 @@ class Sound
         return json_decode($response, true);
     }
 
+    /**
+     * Деструктор: удаляет одноразовые ресурсы (once-uploaded) и очищает кеш, если требуется.
+     *
+     * @return void
+     */
     public function __destruct()
     {
         foreach ($this->oncedData as $id => $item) {
             $this->delete($id);
 
-            // Если картинка закеширована, удаляем кеш тоже
+            // Если звук закеширован, удаляем кеш тоже
             if ($item['cache']) {
                 $this->forget($item['sound']);
             }

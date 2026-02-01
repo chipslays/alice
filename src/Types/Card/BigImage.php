@@ -18,6 +18,12 @@ class BigImage extends AbstractCard
         'button' => [],
     ];
 
+    /**
+     * @param string $imageId
+     * @param string|null $title
+     * @param string|null $description
+     * @param Button|null $button
+     */
     public function __construct(string $imageId, ?string $title = null, ?string $description = null, ?Button $button = null)
     {
         if ($button) {
@@ -30,6 +36,11 @@ class BigImage extends AbstractCard
             ->description($description);
     }
 
+    /**
+     * Установить изображение.
+     * @param string $imageId
+     * @return static
+     */
     public function image(string $imageId): static
     {
         $this->card['image_id'] = Assets::get($imageId) ?? $imageId;
@@ -37,6 +48,11 @@ class BigImage extends AbstractCard
         return $this;
     }
 
+    /**
+     * Установить заголовок карточки.
+     * @param string|null $title
+     * @return static
+     */
     public function title(?string $title = null): static
     {
         $this->card['title'] = $title;
@@ -44,6 +60,11 @@ class BigImage extends AbstractCard
         return $this;
     }
 
+    /**
+     * Установить описание карточки.
+     * @param string|null $description
+     * @return static
+     */
     public function description(?string $description = null): static
     {
         $this->card['description'] = $description;
@@ -51,6 +72,11 @@ class BigImage extends AbstractCard
         return $this;
     }
 
+    /**
+     * Установить кнопку карточки.
+     * @param Button $button
+     * @return static
+     */
     public function button(Button $button): static
     {
         $this->card['button'] = $button->toArray();

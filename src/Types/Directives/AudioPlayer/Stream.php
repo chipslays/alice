@@ -2,6 +2,9 @@
 
 namespace Alice\Types\Directives\AudioPlayer;
 
+/**
+ * Представление потока аудио (Stream) для AudioPlayer.
+ */
 class Stream
 {
     protected array $stream = [
@@ -10,6 +13,11 @@ class Stream
         'token' => null,
     ];
 
+    /**
+     * @param string $url
+     * @param int $offsetMs
+     * @param string|null $token
+     */
     public function __construct(string $url, int $offsetMs = 0, ?string $token = null) {
         $this->stream = [
             'url' => $url,
@@ -18,6 +26,11 @@ class Stream
         ];
     }
 
+    /**
+     * Преобразовать Stream в массив.
+     *
+     * @return array
+     */
     public function toArray(): array
     {
         return $this->stream;

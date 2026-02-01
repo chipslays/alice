@@ -12,6 +12,11 @@ class Slot
 
     public protected(set) ?string $end = null;
 
+    /**
+     * Конструктор слота интента.
+     *
+     * @param array $data Данные слота
+     */
     public function __construct(protected array $data)
     {
         $this->type = $data['type'];
@@ -23,6 +28,13 @@ class Slot
         }
     }
 
+    /**
+     * Возвращает значение слота. Если передан ключ — возвращает подзначение из массива.
+     *
+     * @param string|null $key Ключ внутри значения
+     * @param mixed $default Значение по умолчанию или callable
+     * @return mixed
+     */
     public function value(?string $key = null, mixed $default = null): mixed
     {
         if (!is_array($this->data['value'])) {

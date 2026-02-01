@@ -14,7 +14,10 @@ class Group
     ) {}
 
     /**
-     * Добавить middleware ко всем событиям в этой группе
+     * Добавить middleware ко всем событиям в этой группе.
+     *
+     * @param array|string|Closure $middleware
+     * @return $this
      */
     public function middleware(array|string|Closure $middleware): self
     {
@@ -26,7 +29,10 @@ class Group
 
 
     /**
-     * Установить приоритет всем событиям группы
+     * Установить приоритет всем событиям группы.
+     *
+     * @param int $priority
+     * @return $this
      */
     public function priority(int $priority): self
     {
