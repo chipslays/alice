@@ -27,7 +27,7 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+        run: composer update
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=2G
