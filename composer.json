@@ -1,6 +1,8 @@
 {
     "name": "alice/sdk",
+    "description": "PHP framework for building conversational AI applications (Yandex Alice / Yandex Dialogs)",
     "type": "library",
+    "homepage": "https://github.com/chipslays/alice",
     "license": "MIT",
     "autoload": {
         "psr-4": {
@@ -9,6 +11,14 @@
         "files": [
             "helpers.php"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Alice\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "check:phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
     },
     "require-dev": {
         "symfony/var-dumper": "^8.0",
