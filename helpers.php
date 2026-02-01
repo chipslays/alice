@@ -5,6 +5,13 @@ use Alice\Support\Container;
 use Alice\Support\Defer;
 
 if (!function_exists('container')) {
+    /**
+     * Возвращает контейнер зависимостей или конкретный сервис из контейнера.
+     *
+     * @param string|null $abstract Имя сервиса или абстракции для получения из контейнера.
+     * @return mixed Если $abstract равен null — возвращается экземпляр контейнера (Container),
+     *               иначе — запрошенный сервис.
+     */
     function container(?string $abstract = null): mixed
     {
         if (is_null($abstract)) {
@@ -16,6 +23,13 @@ if (!function_exists('container')) {
 }
 
 if (!function_exists('call')) {
+    /**
+     * Вызывает обработчик через контейнер (с поддержкой автозаполнения зависимостей).
+     *
+     * @param callable|array<mixed>|string $handler Обработчик: функция, [класс, 'метод'] или строковое представление.
+     * @param array<mixed> $parameters Параметры, передаваемые обработчику.
+     * @return mixed Результат вызова обработчика.
+     */
     function call(mixed $handler, array $parameters = []): mixed
     {
         return Container::getInstance()->call($handler, $parameters);
@@ -23,12 +37,26 @@ if (!function_exists('call')) {
 }
 
 if (!function_exists('defer')) {
+    /**
+     * Добавляет отложенное выполнение (defer) в очередь.
+     *
+     * @param callable|array<mixed>|string $callback Функция или описание обработчика для defer.
+     * @param array<mixed> $arguments Аргументы для передачи в callback при выполнении.
+     * @param int $priority Приоритет выполнения (больше — выше приоритет).
+     * @return void
+     */
     function defer(callable|string|array $callback, array $arguments = [], int $priority = 0): void {
         Defer::add($callback, $arguments, $priority);
     }
 }
 
 if (!function_exists('collectable')) {
+    /**
+     * Создаёт новый экземпляр `Collection` из массива.
+     *
+     * @param array<mixed> $items Элементы коллекции.
+     * @return Collection<mixed> Новый объект коллекции.
+     */
     function collectable(array $items = []): Collection
     {
         return new Collection($items);
@@ -36,9 +64,14 @@ if (!function_exists('collectable')) {
 }
 
 /**
- * @param int|float $count Число
- * @param array $forms Массив форм ['арбуз', 'арбуза', 'арбузов']
- * @param string|null $format Формат вывода (по умолчанию "%d %s")
+ * Возвращает корректную форму слова в зависимости от указанного числа (русские формы).
+ *
+ * Пример формата: ['арбуз', 'арбуза', 'арбузов'] — [именительный, родительный (2-4), родительный (5+)].
+ *
+ * @param int|float $count Число для склонения.
+ * @param array<string> $forms Массив из трёх форм слова: [единственное, родительный(2-4), родительный(5+)].
+ * @param string|null $format Формат вывода (по умолчанию "%d %s"). Можно передать "%s" чтобы вернуть только слово.
+ * @return string Отформатированная строка с числом и словом или только словом (в зависимости от $format).
  */
 function plural(int|float $count, array $forms, ?string $format = null): string
 {

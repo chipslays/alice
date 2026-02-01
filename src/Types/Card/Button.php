@@ -11,11 +11,13 @@ class Button
     /**
      * Конструктор кнопки карточки.
      *
-     * @param string|array $text Текст кнопки или варианты
+     * @param string|array<int,string> $text Текст кнопки или варианты
      * @param string|null $action Действие
-     * @param array $payload Нагрузочный payload
+     * @param array<string,mixed> $payload Нагрузочный payload
      * @param string|null $url Ссылка
      */
+
+
     public function __construct(
         string|array $text,
         protected ?string $action = null,
@@ -58,7 +60,7 @@ class Button
 
     /**
      * Установить payload для кнопки.
-     * @param array $payload
+     * @param array<string,mixed> $payload
      * @return static
      */
     public function payload(array $payload): static
@@ -70,7 +72,7 @@ class Button
 
     /**
      * Преобразовать кнопку в массив.
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {

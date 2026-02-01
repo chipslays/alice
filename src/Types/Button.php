@@ -14,9 +14,9 @@ class Button
     protected string $title;
 
     /**
-     * @param string|array $title Заголовок кнопки или варианты
+     * @param string|array<int,string> $title Заголовок кнопки или варианты
      * @param string|null $action Имя действия
-     * @param array $payload Нагрузочный payload
+     * @param array<string,mixed> $payload Нагрузочный payload
      * @param string|null $url Ссылка (если есть)
      * @param bool $hide Скрывать ли кнопку на экране
      */
@@ -64,7 +64,7 @@ class Button
     /**
      * Устанавливает payload для кнопки.
      *
-     * @param array $payload Нагрузочный payload
+     * @param array<string,mixed> $payload Нагрузочный payload
      * @return static
      */
     public function payload(array $payload): static
@@ -89,7 +89,7 @@ class Button
     /**
      * Преобразует кнопку в массив для ответа платформы.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {

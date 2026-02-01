@@ -7,6 +7,7 @@ namespace Alice\Types\Directives\AudioPlayer;
  */
 class Metadata
 {
+    /** @var array<string,mixed> */
     protected array $meta = [
         'title' => null,
         'sub_title' => null,
@@ -43,7 +44,7 @@ class Metadata
     /**
      * Преобразовать метаданные в массив.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {

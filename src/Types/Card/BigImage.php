@@ -10,6 +10,7 @@ use Alice\Support\Assets;
  */
 class BigImage extends AbstractCard
 {
+    /** @var array<string,mixed> */
     protected array $card = [
         'type' => 'BigImage',
         'image_id' => null,

@@ -11,11 +11,15 @@ class Pipeline
 {
     /**
      * Объект, который пропускаем через трубы (middleware).
+     *
+     * @var mixed
      */
     protected mixed $passable;
 
     /**
      * Список труб (middleware).
+     *
+     * @var array<int, callable|string|object>
      */
     protected array $pipes = [];
 
@@ -35,6 +39,8 @@ class Pipeline
 
     /**
      * Установить список middleware.
+     *
+     * @param array<int, callable|string|object> $pipes
      */
     public function through(array $pipes): self
     {
@@ -75,6 +81,8 @@ class Pipeline
 
     /**
      * Основная магия сборки замыканий.
+     *
+     * @return Closure
      */
     protected function carry(): Closure
     {
@@ -86,6 +94,7 @@ class Pipeline
                 } elseif (!is_object($pipe)) {
                     // Если это строка (имя класса)
                     $pipe = Container::getInstance()->get($pipe);
+                    /** @var object $pipe */
                 }
 
                 // Вызов метода handle($passable, $next)

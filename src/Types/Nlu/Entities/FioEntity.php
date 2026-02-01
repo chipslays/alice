@@ -15,7 +15,8 @@ class FioEntity extends Entity
      */
     public function firstName(mixed $default = null): ?string
     {
-        return $this->value('first_name', $default);
+        $val = $this->value('first_name', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -26,7 +27,8 @@ class FioEntity extends Entity
      */
     public function middleName(mixed $default = null): ?string
     {
-        return $this->value('patronymic_name', $default);
+        $val = $this->value('patronymic_name', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -37,7 +39,8 @@ class FioEntity extends Entity
      */
     public function lastName(mixed $default = null): ?string
     {
-        return $this->value('last_name', $default);
+        $val = $this->value('last_name', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**

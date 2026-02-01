@@ -10,15 +10,15 @@ namespace Alice\Support;
 class Defer
 {
     /**
-     * @var array<int, list<array{callback: callable|string|array, arguments: array}>>
+     * @var array<int, array<int, array{callback: callable|string|array<int,mixed>, arguments: array<int,mixed>}>>
      */
     protected static array $callbacks = [];
 
     /**
      * Добавляет колбэк в очередь выполнения.
      *
-     * @param callable|string|array $callback
-     * @param array $arguments
+     * @param callable|string|array<int,mixed> $callback
+     * @param array<int,mixed> $arguments
      * @param int $priority Чем БОЛЬШЕ число, тем РАНЬШЕ выполнится (по умолчанию 0).
      */
     public static function add(callable|string|array $callback, array $arguments = [], int $priority = 0): void

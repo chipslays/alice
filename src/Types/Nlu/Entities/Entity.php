@@ -9,20 +9,25 @@ use Alice\Support\Container;
  */
 class Entity
 {
-    public protected(set) string $type;
+    public string $type;
 
-    public protected(set) string $start;
+    public string $start;
 
-    public protected(set) string $end;
+    public string $end;
 
     /**
-     * @param array $data Данные сущности
+     * @param array<string,mixed> $data Данные сущности
      */
     public function __construct(protected array $data)
     {
-        $this->type = $data['type'];
-        $this->start = $data['tokens']['start'];
-        $this->end = $data['tokens']['end'];
+        $this->type = '';
+        if (isset($data['type']) && is_scalar($data['type'])) {
+            $this->type = (string) $data['type'];
+        }
+
+        $tokens = is_array($data['tokens'] ?? null) ? $data['tokens'] : [];
+        $this->start = is_scalar($tokens['start'] ?? null) ? (string) $tokens['start'] : '';
+        $this->end = is_scalar($tokens['end'] ?? null) ? (string) $tokens['end'] : '';
     }
 
     /**
@@ -35,10 +40,40 @@ class Entity
     public function value(?string $key = null, mixed $default = null): mixed
     {
         // Например, `YANDEX.NUMBER` имеет в поле `value` число, а не массив.
-        if (!is_array($this->data['value'])) {
-            return $this->data['value'];
+        $val = $this->data['value'] ?? null;
+        // Например, `YANDEX.NUMBER` имеет в поле `value` число, а не массив.
+        if (!is_array($val)) {
+            if ($key === null) {
+                if ($default instanceof \Closure) {
+                    return Container::getInstance()->call($default);
+                }
+                return $val ?? $default;
+            }
+            return $val ?? $default;
         }
 
-        return $this->data['value'][$key] ?? Container::getInstance()->call($default);
+        if ($key === null) {
+            return $val;
+        }
+
+        if (array_key_exists($key, $val)) {
+            return $val[$key];
+        }
+
+        if ($default instanceof \Closure) {
+            return Container::getInstance()->call($default);
+        }
+
+        return $default;
+    }
+
+    /**
+     * Преобразовать сущность в массив.
+     *
+     * @return array<string,mixed>
+     */
+    public function toArray(): array
+    {
+        return $this->data;
     }
 }

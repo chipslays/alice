@@ -7,12 +7,13 @@ namespace Alice\Support;
  */
 class Assets
 {
+    /** @var array<string, mixed> */
     protected static array $items = [];
 
     /**
      * Загрузить набор ассетов.
      *
-     * @param array $items
+     * @param array<string,mixed> $items
      * @return void
      */
     public static function load(array $items): void
@@ -52,7 +53,7 @@ class Assets
      */
     public static function has(string $alias): bool
     {
-        return isset($alias, static::$items);
+        return array_key_exists($alias, static::$items);
     }
 
     /**
@@ -79,7 +80,7 @@ class Assets
     /**
      * Получить все ассеты в виде массива.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function all(): array
     {
@@ -89,7 +90,7 @@ class Assets
     /**
      * Преобразовать в массив.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function toArray(): array
     {

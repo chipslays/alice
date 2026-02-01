@@ -21,11 +21,11 @@ trait Eventable
     /**
      * Регистрирует обработчик события с правилами.
      *
-     * @param Closure|array|string $rules
-     * @param Closure|callable|array|string $handler
+     * @param Closure|array<int|string,mixed>|string $rules
+     * @param Closure|array<int,mixed>|string $handler
      * @return Event
      */
-    public function on(Closure|array|string $rules, Closure|callable|array|string $handler): Event
+    public function on(Closure|array|string $rules, Closure|array|string $handler): Event
     {
         return $this->getEventDispatcher()->add($rules, $handler);
     }
@@ -46,7 +46,7 @@ trait Eventable
     /**
      * Регистрирует middleware для диспетчера событий.
      *
-     * @param string|array|Closure $middleware Middleware или список middleware
+     * @param array<int, string|Closure|array<int,mixed>>|string|Closure $middleware Middleware или список middleware
      * @return self
      */
     public function middleware(string|array|Closure $middleware): self
@@ -73,7 +73,7 @@ trait Eventable
      * Регистрирует обработчик по умолчанию (fallback). Вызывается, если не найдено
      * других обработчиков.
      *
-     * @param Closure|array|string $handler Обработчик по умолчанию
+     * @param Closure|array<int,mixed>|string $handler Обработчик по умолчанию
      * @return Event
      */
     public function onFallback(Closure|array|string $handler): Event
@@ -86,7 +86,7 @@ trait Eventable
     /**
      * Регистрирует обработчик события старта новой сессии.
      *
-     * @param Closure|array|string $handler Обработчик старта
+     * @param Closure|array<int,mixed>|string $handler Обработчик старта
      * @return Event
      */
     public function onStart(Closure|array|string $handler): Event
@@ -106,8 +106,8 @@ trait Eventable
     /**
      * Регистрирует обработчик для конкретной команды текста запроса.
      *
-     * @param array|string $command Команда или список команд
-     * @param Closure|array|string $handler Обработчик
+     * @param array<int,string>|string $command Команда или список команд
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onCommand(array|string $command, Closure|array|string $handler): Event
@@ -118,8 +118,8 @@ trait Eventable
     /**
      * Регистрирует обработчик для action-пэйлоада.
      *
-     * @param array|string $action Идентификатор action или список
-     * @param Closure|array|string $handler Обработчик
+     * @param array<int,string>|string $action Идентификатор action или список
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAction(array|string $action, Closure|array|string $handler): Event
@@ -130,7 +130,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для любого типа запроса (request.type).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAny(Closure|array|string $handler): Event
@@ -141,16 +141,14 @@ trait Eventable
     /**
      * Регистрирует обработчик для указанного интента NLU.
      *
-     * @param array|string $id Идентификатор интента или список идентификаторов
-     * @param Closure|array|string $handler Обработчик
+     * @param array<int,string>|string $id Идентификатор интента или список идентификаторов
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onIntent(array|string $id, Closure|array|string $handler): Event
     {
         $rule = function (Context $context) use ($id): bool {
-            return (bool) array_intersect((array) $id, array_keys(
-                $context->get('request.nlu.intents')
-            ));
+            return (bool) array_intersect((array) $id, array_keys((array) $context->get('request.nlu.intents')));
         };
 
         return $this->on($rule, $handler);
@@ -159,7 +157,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для интента подтверждения (YANDEX.CONFIRM).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onConfirm(Closure|array|string $handler): Event
@@ -170,7 +168,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для интента отказа (YANDEX.REJECT).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onReject(Closure|array|string $handler): Event
@@ -181,7 +179,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для интента помощи (YANDEX.HELP).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onHelp(Closure|array|string $handler): Event
@@ -192,7 +190,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для интента повтора (YANDEX.REPEAT).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onRepeat(Closure|array|string $handler): Event
@@ -203,7 +201,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для интента "что ты умеешь" (YANDEX.WHAT_CAN_YOU_DO).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onWhatCanYouDo(Closure|array|string $handler): Event
@@ -214,7 +212,7 @@ trait Eventable
     /**
      * Регистрирует обработчик для опасного контекста (dangerous_context).
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onDangerous(Closure|array|string $handler): Event
@@ -225,7 +223,7 @@ trait Eventable
     /**
      * Регистрирует обработчик подтверждения покупки.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onPurchaseConfirmation(Closure|array|string $handler): Event
@@ -236,7 +234,7 @@ trait Eventable
     /**
      * Регистрирует обработчик события Show.Pull.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onShowPull(Closure|array|string $handler): Event
@@ -247,7 +245,7 @@ trait Eventable
     /**
      * Регистрирует обработчик события начала воспроизведения AudioPlayer.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAudioPlayerPlaybackStarted(Closure|array|string $handler): Event
@@ -258,7 +256,7 @@ trait Eventable
     /**
      * Регистрирует обработчик события завершения воспроизведения AudioPlayer.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAudioPlayerPlaybackFinished(Closure|array|string $handler): Event
@@ -269,7 +267,7 @@ trait Eventable
     /**
      * Регистрирует обработчик события почти завершенного воспроизведения AudioPlayer.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAudioPlayerPlaybackNearlyFinished(Closure|array|string $handler): Event
@@ -280,7 +278,7 @@ trait Eventable
     /**
      * Регистрирует обработчик остановки воспроизведения AudioPlayer.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAudioPlayerPlaybackStopped(Closure|array|string $handler): Event
@@ -291,7 +289,7 @@ trait Eventable
     /**
      * Регистрирует обработчик ошибки воспроизведения AudioPlayer.
      *
-     * @param Closure|array|string $handler Обработчик
+     * @param Closure|array<int,mixed>|string $handler Обработчик
      * @return Event
      */
     public function onAudioPlayerPlaybackFailed(Closure|array|string $handler): Event

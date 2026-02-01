@@ -7,12 +7,13 @@ namespace Alice\Types\Directives;
  */
 abstract class Directive
 {
+    /** @var array<string,mixed> */
     protected array $directive = [];
 
     /**
      * Преобразовать директиву в массив.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {

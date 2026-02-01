@@ -16,6 +16,7 @@ class Sound
 
     protected CurlHandle $httpClient;
 
+    /** @var array<int|string,mixed> */
     protected array $oncedData = [];
 
     /**
@@ -45,7 +46,7 @@ class Sound
      * Для каждого аккаунта Яндекса на Диалоги
      * можно загрузить не больше 100 МБ картинок.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function status(): array
     {
@@ -64,7 +65,7 @@ class Sound
     /**
      * Получить список загруженных звуков.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function all(): array
     {
@@ -83,12 +84,12 @@ class Sound
     /**
      * Удалить звук из Диалогов.
      *
-     * @param string $id
-     * @return array
+     * @param string|int $id
+     * @return array<string,mixed>
      */
-    public function delete(string $id): array
+    public function delete(string|int $id): array
     {
-        $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/sounds/' . $id;
+        $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/sounds/' . (string) $id;
 
         curl_setopt($this->httpClient, CURLOPT_URL, $endpoint);
         curl_setopt($this->httpClient, CURLOPT_CUSTOMREQUEST, 'DELETE');
@@ -119,19 +120,26 @@ class Sound
         }
 
         if (!file_exists($sound)) {
-            $response = $this->uploadByUrl($sound);
+            /** @var array<string,mixed> $response */
+            $response = (array) $this->uploadByUrl($sound);
         } else {
-            $response = $this->uploadByFile($sound);
+            /** @var array<string,mixed> $response */
+            $response = (array) $this->uploadByFile($sound);
         }
 
-        // Если ответ не содержит картинку
-        if (!isset($response['sound']['id'])) {
+        // Если ответ не содержит звук или id — возвращаем null
+        if (!isset($response['sound']) || !is_array($response['sound']) || !isset($response['sound']['id'])) {
             return null;
         }
 
-        $soundId = $response['sound']['id'];
+        $idVal = $response['sound']['id'];
+        if (!is_scalar($idVal)) {
+            return null;
+        }
 
-        // Кешируем картинку
+        $soundId = (string) $idVal;
+
+        // Кешируем звук
         if ($cache) {
             file_put_contents($this->path . '/' . md5($sound), $soundId, LOCK_EX);
         }
@@ -143,7 +151,7 @@ class Sound
      * Получить метаданные о звуке.
      *
      * @param string $sound Идентификатор или имя ресурса
-     * @return array
+     * @return array<string,mixed>
      */
     public function info(string $sound): array
     {
@@ -163,13 +171,13 @@ class Sound
      * Загрузить звук по ссылке.
      *
      * @param string $url
-     * @return array
+     * @return array<string,mixed>
      */
     public function uploadByUrl(string $url): array
     {
         $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/sounds';
 
-        $payload = json_encode(compact('url'));
+        $payload = json_encode(compact('url')) ?: '{}';
 
         curl_setopt($this->httpClient, CURLOPT_URL, $endpoint);
         curl_setopt($this->httpClient, CURLOPT_POST, true);
@@ -188,7 +196,7 @@ class Sound
      * Загрузить локальное звук.
      *
      * @param string $file
-     * @return array
+     * @return array<string,mixed>
      */
     public function uploadByFile(string $file): array
     {
@@ -219,14 +227,15 @@ class Sound
      */
     public function retrieve(string $sound): ?string
     {
-        return @file_get_contents($this->path . '/' . md5($sound));
+        $content = @file_get_contents($this->path . '/' . md5($sound));
+        return $content === false ? null : $content;
     }
 
     /**
      * Удалить звук из кеша.
      *
      * @param string $sound Ссылка или путь до локального файла.
-     * @return self
+     * @return static
      */
     public function forget(string $sound): static
     {
@@ -236,13 +245,15 @@ class Sound
     }
 
     /**
-     * @param string $response
-     * @param string|null $sound
-     * @return array
+     * Декодирует HTTP-ответ из сервиса.
+     *
+     * @param bool|string $response Ответ от cURL
+     * @return array<string,mixed>
      */
-    protected function handle(string $response): array
+    protected function handle(bool|string $response): array
     {
-        return json_decode($response, true);
+        $decoded = json_decode((string) $response, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -256,8 +267,8 @@ class Sound
             $this->delete($id);
 
             // Если звук закеширован, удаляем кеш тоже
-            if ($item['cache']) {
-                $this->forget($item['sound']);
+            if (is_array($item) && !empty($item['cache']) && isset($item['sound'])) {
+                $this->forget((string) $item['sound']);
             }
         }
     }

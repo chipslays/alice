@@ -19,6 +19,7 @@ class Dice
         if ($chance <= 0) {
             return false;
         }
+
         if ($chance >= 100) {
             return true;
         }

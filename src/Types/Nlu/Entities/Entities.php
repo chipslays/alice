@@ -9,20 +9,30 @@ use Alice\Support\Container;
  */
 class Entities
 {
+    /** @var array<int,Entity> */
+    protected array $entities = [];
+
     /**
-     * @param array $entities
+     * @param array<int,mixed> $entities Сырые данные сущностей
      */
-    public function __construct(protected array $entities = [])
+    public function __construct(array $entities = [])
     {
         foreach ($entities as $key => $entity) {
-            $entities[$key] = match ($entity['type']) {
-                'YANDEX.FIO' => new FioEntity($entity),
-                'YANDEX.GEO' => new GeoEntity($entity),
-                'YANDEX.NUMBER' => new NumberEntity($entity),
-                'YANDEX.DATETIME' => new DatetimeEntity($entity),
-                default => new Entity($entity),
+            /** @var array<string,mixed> $entityData */
+            $entityData = is_array($entity) ? $entity : [];
+            $type = is_scalar($entityData['type'] ?? null) ? (string) $entityData['type'] : '';
+
+            $entities[$key] = match ($type) {
+                'YANDEX.FIO' => new FioEntity($entityData),
+                'YANDEX.GEO' => new GeoEntity($entityData),
+                'YANDEX.NUMBER' => new NumberEntity($entityData),
+                'YANDEX.DATETIME' => new DatetimeEntity($entityData),
+                default => new Entity($entityData),
             };
         }
+
+        // Сохраняем обёрнутые сущности в поле объекта
+        $this->entities = $entities;
     }
 
     /**
@@ -30,7 +40,7 @@ class Entities
      *
      * @param string $type
      * @param mixed $default
-     * @return array
+     * @return array<int,Entity>
      */
     public function get(string $type, mixed $default = []): array
     {
@@ -42,7 +52,26 @@ class Entities
             }
         }
 
-        return empty($result) ? Container::getInstance()->call($default) : $result;
+        if (empty($result)) {
+            if ($default === null || $default === []) {
+                return [];
+            }
+
+            if (is_callable($default) || is_string($default) || is_array($default)) {
+                $fallback = (array) Container::getInstance()->call($default);
+                $filtered = [];
+                foreach ($fallback as $item) {
+                    if ($item instanceof Entity) {
+                        $filtered[] = $item;
+                    }
+                }
+                return $filtered;
+            }
+
+            return [];
+        }
+
+        return $result;
     }
 
     /**
@@ -56,19 +85,19 @@ class Entities
 
     /**
      * Вернуть все сущности.
-     * @return array
+     * @return array<int, Entity>
      */
     public function all(): array
     {
-        return $this->toArray();
+        return $this->entities;
     }
 
     /**
      * Преобразовать в массив.
-     * @return array
+     * @return array<int,array<string,mixed>>
      */
     public function toArray(): array
     {
-        return $this->entities;
+        return array_map(fn(Entity $e) => $e->toArray(), $this->entities);
     }
 }

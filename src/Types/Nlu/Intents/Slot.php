@@ -6,25 +6,27 @@ use Alice\Support\Container;
 
 class Slot
 {
-    public protected(set) string $type;
+    public string $type;
 
-    public protected(set) ?string $start = null;
+    public ?string $start = null;
 
-    public protected(set) ?string $end = null;
+    public ?string $end = null;
 
     /**
      * Конструктор слота интента.
      *
-     * @param array $data Данные слота
+     * @param array<string,mixed> $data Данные слота
      */
     public function __construct(protected array $data)
     {
-        $this->type = $data['type'];
-        $this->end = $data['value'];
+        $this->type = is_scalar($data['type'] ?? null) ? (string) $data['type'] : '';
 
-        if (isset($data['tokens'])) {
-            $this->start = $data['tokens']['start'];
-            $this->end = $data['tokens']['end'];
+        $val = $data['value'] ?? null;
+        $this->end = is_scalar($val) ? (string) $val : null;
+
+        if (isset($data['tokens']) && is_array($data['tokens'])) {
+            $this->start = is_scalar($data['tokens']['start'] ?? null) ? (string) $data['tokens']['start'] : null;
+            $this->end = is_scalar($data['tokens']['end'] ?? null) ? (string) $data['tokens']['end'] : $this->end;
         }
     }
 
@@ -37,10 +39,26 @@ class Slot
      */
     public function value(?string $key = null, mixed $default = null): mixed
     {
-        if (!is_array($this->data['value'])) {
-            return $this->data['value'];
+        $val = $this->data['value'] ?? null;
+
+        if (!is_array($val)) {
+            if ($key === null) {
+                if ($default instanceof \Closure) {
+                    return Container::getInstance()->call($default);
+                }
+                return $val ?? $default;
+            }
+            return $val ?? $default;
         }
 
-        return $this->data['value'][$key] ?? Container::getInstance()->call($default);
+        if ($key !== null && array_key_exists($key, $val)) {
+            return $val[$key];
+        }
+
+        if ($default instanceof \Closure) {
+            return Container::getInstance()->call($default);
+        }
+
+        return $default;
     }
 }

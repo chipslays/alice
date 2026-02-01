@@ -17,16 +17,16 @@ class Dispatcher
     /** @var Event[] */
     protected array $listeners = [];
 
-    /** @var array */
+    /** @var array<int,mixed> */
     protected array $groupStack = [];
 
-    /** @var array */
+    /** @var array<int,mixed> */
     protected array $globalMiddleware = [];
 
     /**
      * Добавляет глобальный middleware.
      *
-     * @param string|Closure|array $middleware
+     * @param array<int,mixed>|string|Closure $middleware
      * @return $this
      */
     public function pipe(string|Closure|array $middleware): self
@@ -53,14 +53,15 @@ class Dispatcher
     /**
      * Регистрирует событие с правилами и обработчиком.
      *
-     * @param Closure|array|string $rules
-     * @param Closure|callable|array|string $handler
+     * @param Closure|array<int|string,mixed>|string $rules
+     * @param Closure|array<int,mixed>|string $handler
      * @return Event
      */
-    public function add(Closure|array|string $rules, Closure|callable|array|string $handler): Event
+    public function add(Closure|array|string $rules, Closure|array|string $handler): Event
     {
         $event = new Event($rules, $handler);
         foreach ($this->groupStack as $group) {
+            /** @var array{middleware?: array<int, Closure|array<int,mixed>|string>|string|Closure} $group */
             if (isset($group['middleware'])) {
                 $event->middleware($group['middleware']);
             }
@@ -77,11 +78,13 @@ class Dispatcher
     public function dispatch(): bool
     {
         $pipeline = new Pipeline;
+        /** @var Context $context */
         $context = Container::getInstance()->get(Context::class);
         $handled = false; // Флаг обработки
 
         foreach ($this->listeners as $event) {
             if ($this->matches($event->rules, $context)) {
+                /** @var array<int,(callable(): mixed)|object|string> $middlewares */
                 $middlewares = array_merge($this->globalMiddleware, $event->middleware);
 
                 $destination = function ($context) use ($event) {
@@ -104,6 +107,9 @@ class Dispatcher
 
     // --- ОБНОВЛЕННАЯ ЛОГИКА MATCHES ---
 
+    /**
+     * @param Closure|array<int|string,mixed>|string $rules
+     */
     private function matches(array|string|Closure $rules, Context $context): bool
     {
         // 1. Если передано Замыкание (Closure) — это кастомная проверка
@@ -132,6 +138,10 @@ class Dispatcher
                 }
 
                 // Иначе проверяем наличие ключа в контексте
+                if (!is_string($pattern) && !is_int($pattern)) {
+                    return false;
+                }
+
                 if (!$context->has($pattern)) {
                     return false;
                 }
@@ -153,11 +163,22 @@ class Dispatcher
                     $matched = true;
                     break;
                 }
-                if ($this->matchSmartString($p, $subject, $context)) {
+
+                if (!is_string($p)) {
+                    continue;
+                }
+
+                if (!is_string($subject) && !is_numeric($subject)) {
+                    continue;
+                }
+
+                $subjectStr = (string) $subject;
+
+                if ($this->matchSmartString($p, $subjectStr, $context)) {
                     $matched = true;
                     break;
                 }
-                if ($this->matchRegex($p, $subject, $context)) {
+                if ($this->matchRegex($p, $subjectStr, $context)) {
                     $matched = true;
                     break;
                 }
@@ -208,8 +229,15 @@ class Dispatcher
             return '(?: (?P<' . $m[1] . '>.*?))?';
         }, $value);
 
-        return '~^' . preg_replace_callback('/{(\w+)}/', function($m) {
+        // Если preg_replace_callback вернул null — используем исходное значение
+        $pattern = is_string($pattern) ? $pattern : $value;
+
+        $replaced = preg_replace_callback('/{(\w+)}/', function($m) {
             return '(?P<' . $m[1] . '>.*?)';
-        }, $pattern) . '$~u';
+        }, $pattern);
+
+        $replaced = is_string($replaced) ? $replaced : $pattern;
+
+        return '~^' . $replaced . '$~u';
     }
 }

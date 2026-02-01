@@ -8,11 +8,29 @@ namespace Alice\Types\Meta;
 class Interfaces
 {
     /**
-     * @param array $interfaces
+     * @param array<string,mixed> $interfaces
      */
     public function __construct(protected array $interfaces = [])
     {
         //
+    }
+
+    /**
+     * Вернуть все интерфейсы.
+     * @return array<string,mixed>
+     */
+    public function all(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Преобразовать в массив.
+     * @return array<string,mixed>
+     */
+    public function toArray(): array
+    {
+        return $this->interfaces;
     }
 
     /**
@@ -49,23 +67,5 @@ class Interfaces
     public function hasAccountLinking(): bool
     {
         return array_key_exists('account_linking', $this->interfaces);
-    }
-
-    /**
-     * Вернуть все интерфейсы.
-     * @return array
-     */
-    public function all(): array
-    {
-        return $this->toArray();
-    }
-
-    /**
-     * Преобразовать в массив.
-     * @return array
-     */
-    public function toArray(): array
-    {
-        return $this->interfaces;
     }
 }

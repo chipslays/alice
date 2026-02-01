@@ -20,6 +20,15 @@ use JsonException;
 
 class Response
 {
+    /**
+     * @var array{
+     *     response: array{text?: string|null, tts?: string|null, buttons?: array<int,mixed>, end_session: bool},
+     *     version: string,
+     *     session_state?: array<int|string,mixed>,
+     *     application_state?: array<int|string,mixed>,
+     *     user_state_update?: array<int|string,mixed>
+     * }
+     */
     protected array $response = [
         'response' => [
             'text' => null,
@@ -57,18 +66,25 @@ class Response
     /**
      * Добавляет кнопки к ответу.
      *
-     * @param array|string $buttons Массив кнопок или ключ из настроек buttons
+     * @param array<int,mixed>|string $buttons Массив кнопок или ключ из настроек buttons
      * @return static
      */
     public function withButtons(array|string $buttons): static
     {
         $buttons = is_string($buttons) ? Buttons::get($buttons) : $buttons;
 
-        $this->response['response']['buttons'] = $this->resolveButtons((array) $buttons);
+        /** @var array<int,mixed> $buttonsArr */
+        $buttonsArr = (array) $buttons;
+
+        $this->response['response']['buttons'] = $this->resolveButtons($buttonsArr);
 
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $buttons
+     * @return array<int,mixed>
+     */
     protected function resolveButtons(array $buttons): array
     {
         return array_reduce(
@@ -78,8 +94,13 @@ class Response
                     $carry,
                     match (true) {
                         $button instanceof Button => [$button->toArray()],
-                        is_array($button) => $this->resolveButtons($button),
-                        is_string($button) => $this->resolveButtons(Buttons::get($button)),
+                        is_array($button) => $this->resolveButtons((array) $button),
+                        is_string($button) => (function($b) {
+                            $sub = Buttons::get($b);
+                            /** @var array<int,mixed> $subList */
+                            $subList = is_array($sub) ? $sub : (array) $sub;
+                            return $this->resolveButtons($subList);
+                        })($button),
                         default => [],
                     }
                 );
@@ -128,12 +149,14 @@ class Response
     /**
      * Мержит дополнительные данные в ответ.
      *
-     * @param array $data Дополнительные данные для объединения
+     * @param array<string,mixed> $data Дополнительные данные для объединения
      * @return static
      */
     public function with(array $data = []): static
     {
-        array_replace_recursive($this->response, $data);
+        /** @var array{response: array{text?: string|null, tts?: string|null, buttons?: array<int,mixed>, end_session: bool}, version: string, session_state?: array<int|string,mixed>, application_state?: array<int|string,mixed>, user_state_update?: array<int|string,mixed>} $merged */
+        $merged = array_replace_recursive($this->response, $data);
+        $this->response = $merged;
 
         return $this;
     }
@@ -181,19 +204,37 @@ class Response
     {
         $container = Container::getInstance();
 
+        /** @var Session $session */
         $session = $container->get(Session::class);
         if ($session->count() > 0) {
-            $this->response['session_state'] = $session->toArray();
+            /** @var array<int|string,mixed> $s */
+            $s = $session->toArray();
+            /** @var array{response: array{text?: string|null, tts?: string|null, buttons?: array<int,mixed>, end_session: bool}, version: string, session_state?: array<int|string,mixed>, application_state?: array<int|string,mixed>, user_state_update?: array<int|string,mixed>} $resp */
+            $resp = $this->response;
+            $resp['session_state'] = $s;
+            $this->response = $resp;
         }
 
+        /** @var Application $application */
         $application = $container->get(Application::class);
         if ($application->count() > 0) {
-            $this->response['application_state'] = $application->toArray();
+            /** @var array<int|string,mixed> $a */
+            $a = $application->toArray();
+            /** @var array{response: array{text?: string|null, tts?: string|null, buttons?: array<int,mixed>, end_session: bool}, version: string, session_state?: array<int|string,mixed>, application_state?: array<int|string,mixed>, user_state_update?: array<int|string,mixed>} $resp */
+            $resp = $this->response;
+            $resp['application_state'] = $a;
+            $this->response = $resp;
         }
 
+        /** @var User $user */
         $user = $container->get(User::class);
         if ($user->count() > 0) {
-            $this->response['user_state_update'] = $user->toArray();
+            /** @var array<int|string,mixed> $u */
+            $u = $user->toArray();
+            /** @var array{response: array{text?: string|null, tts?: string|null, buttons?: array<int,mixed>, end_session: bool}, version: string, session_state?: array<int|string,mixed>, application_state?: array<int|string,mixed>, user_state_update?: array<int|string,mixed>} $resp */
+            $resp = $this->response;
+            $resp['user_state_update'] = $u;
+            $this->response = $resp;
         }
     }
 }

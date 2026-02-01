@@ -9,11 +9,33 @@ class Intents
     /**
      * Конструктор списка интентов.
      *
-     * @param array $intents Массив интентов
+     * @param array<int,mixed> $intents Массив интентов
      */
     public function __construct(protected array $intents = [])
     {
         //
+    }
+
+    /**
+     * Возвращает все интенты как массив.
+     *
+     * @return array<int,mixed>
+     */
+    public function all(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * Преобразует интенты в массив.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function toArray(): array
+    {
+        return array_map(function ($item) {
+            return is_array($item) ? $item : [];
+        }, $this->intents);
     }
 
     /**
@@ -26,10 +48,22 @@ class Intents
     public function get(string $name, mixed $default = null): ?Intent
     {
         if (isset($this->intents[$name])) {
-            return new Intent($this->intents[$name]);
-        } else {
-            return Container::getInstance()->call($default);
+            /** @var array<string,mixed> $intentData */
+            $intentData = is_array($this->intents[$name]) ? $this->intents[$name] : [];
+            return new Intent($intentData);
         }
+
+        if ($default === null) {
+            return null;
+        }
+
+        if (is_callable($default) || is_string($default) || is_array($default)) {
+            /** @var Intent|null */
+            $res = Container::getInstance()->call($default);
+            return $res instanceof Intent ? $res : null;
+        }
+
+        return null;
     }
 
     /**
@@ -42,23 +76,5 @@ class Intents
         return count($this->intents);
     }
 
-    /**
-     * Возвращает все интенты как массив.
-     *
-     * @return array
-     */
-    public function all(): array
-    {
-        return $this->toArray();
-    }
 
-    /**
-     * Преобразует интенты в массив.
-     *
-     * @return array
-     */
-    public function toArray(): array
-    {
-        return $this->intents;
-    }
 }

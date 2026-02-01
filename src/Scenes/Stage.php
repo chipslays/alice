@@ -47,10 +47,11 @@ class Stage
      */
     public function dispatch(): bool
     {
+        /** @var Context $context */
         $context = Container::getInstance()->get(Context::class);
         $currentSceneName = $context->get('state.session.$scene');
 
-        if (!$currentSceneName || !isset($this->scenes[$currentSceneName])) {
+        if (!is_string($currentSceneName) || $currentSceneName === '' || !isset($this->scenes[$currentSceneName])) {
             return false;
         }
 
@@ -68,13 +69,14 @@ class Stage
      */
     public function enter(string $sceneName): void
     {
+        /** @var Context $context */
         $context = Container::getInstance()->get(Context::class);
 
         $oldSceneName = $context->get('state.session.$scene');
 
         // Если уже были в какой-то сцене — вызываем onLeave
-        if ($oldSceneName && isset($this->scenes[$oldSceneName])) {
-            $this->scenes[$oldSceneName]->leave($context);
+        if (is_string($oldSceneName) && $oldSceneName !== '' && isset($this->scenes[$oldSceneName])) {
+            $this->scenes[$oldSceneName]->leave();
         }
 
         // Сохраняем новую сцену в сессию
@@ -82,7 +84,7 @@ class Stage
 
         // Вызываем onEnter новой сцены
         if (isset($this->scenes[$sceneName])) {
-            $this->scenes[$sceneName]->enter($context);
+            $this->scenes[$sceneName]->enter();
         }
     }
 
@@ -94,12 +96,13 @@ class Stage
      */
     public function leave(): void
     {
+        /** @var Context $context */
         $context = Container::getInstance()->get(Context::class);
 
         $currentSceneName = $context->get('state.session.$scene');
 
-        if ($currentSceneName && isset($this->scenes[$currentSceneName])) {
-            $this->scenes[$currentSceneName]->leave($context);
+        if (is_string($currentSceneName) && $currentSceneName !== '' && isset($this->scenes[$currentSceneName])) {
+            $this->scenes[$currentSceneName]->leave();
         }
 
         $context->set('state.session.$scene', null);

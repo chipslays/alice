@@ -70,9 +70,11 @@ class Scene
     {
         if ($this->onEnterHandler) {
             // Вызываем через контейнер для инъекции зависимостей
+            /** @var Context $context */
+            $context = Container::getInstance()->get(Context::class);
             Container::getInstance()
                 ->call($this->onEnterHandler, [
-                    'context' => Container::getInstance()->get(Context::class),
+                    'context' => $context,
                     'scene' => $this,
                 ]);
         }
@@ -86,7 +88,9 @@ class Scene
     public function leave(): void
     {
         if ($this->onLeaveHandler) {
-            Container::getInstance()->call($this->onLeaveHandler, ['context' => Container::getInstance()->get(Context::class), 'scene' => $this]);
+            /** @var Context $context */
+            $context = Container::getInstance()->get(Context::class);
+            Container::getInstance()->call($this->onLeaveHandler, ['context' => $context, 'scene' => $this]);
         }
     }
 

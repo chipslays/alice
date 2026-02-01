@@ -11,11 +11,12 @@ class Event
 {
     public int $priority = 0;
 
+    /** @var array<int, Closure|array<int,mixed>|string> */
     public array $middleware = [];
 
     /**
-     * @param Closure|array|string $rules Правила сопоставления
-     * @param Closure|array|string $handler Обработчик события
+     * @param Closure|array<int|string,mixed>|string $rules Правила сопоставления
+     * @param Closure|array<int,mixed>|string $handler Обработчик события
      */
     public function __construct(
         public readonly Closure|array|string $rules,
@@ -37,7 +38,7 @@ class Event
     /**
      * Добавляет middleware для события.
      *
-     * @param array|string|Closure $middlewares
+     * @param array<int, Closure|array<int,mixed>|string>|string|Closure $middlewares
      * @return $this
      */
     public function middleware(array|string|Closure $middlewares): static

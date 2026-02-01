@@ -9,12 +9,13 @@ use Alice\Support\Buttons;
  */
 abstract class AbstractCard
 {
+    /** @var array<string,mixed> */
     protected array $card = [];
 
     /**
      * Преобразует карточку в массив для ответа.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {
@@ -24,21 +25,27 @@ abstract class AbstractCard
     /**
      * Нормализует параметр кнопки в массив.
      *
-     * @param Button|string|null $button
-     * @return array
+     * @param Button|array<int|string,mixed>|string|null $button
+     * @return array<int|string,mixed>
      */
-    protected function resolveButton(Button|string|null $button = null): array
+    protected function resolveButton(Button|array|string|null $button = null): array
     {
         if ($button === null) {
-            $button = [];
-        } else if (is_string($button)) {
-            /**
-             * Buttons::add('foo', new Button('bar', action: 'baz'));
-             */
-            $button = Buttons::get($button);
-            $button = $button instanceof Button ? $button->toArray() : [];
+            return [];
         }
 
-        return $button;
+        if ($button instanceof Button) {
+            return $button->toArray();
+        }
+
+        if (is_string($button)) {
+            $value = Buttons::get($button, []);
+            if ($value instanceof Button) {
+                return $value->toArray();
+            }
+            return is_array($value) ? $value : (array) $value;
+        }
+
+        return (array) $button;
     }
 }

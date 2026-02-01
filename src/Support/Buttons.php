@@ -7,12 +7,13 @@ namespace Alice\Support;
  */
 class Buttons
 {
+    /** @var array<string, mixed> */
     protected static array $items = [];
 
     /**
      * Загрузить набор кнопок.
      *
-     * @param array $items
+     * @param array<string,mixed> $items
      * @return void
      */
     public static function load(array $items): void
@@ -52,7 +53,7 @@ class Buttons
      */
     public static function has(string $alias): bool
     {
-        return isset($alias, static::$items);
+        return array_key_exists($alias, static::$items);
     }
 
     /**
@@ -79,7 +80,7 @@ class Buttons
     /**
      * Получить все наборы кнопок.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function all(): array
     {
@@ -89,7 +90,7 @@ class Buttons
     /**
      * Преобразовать в массив.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public static function toArray(): array
     {

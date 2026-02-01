@@ -14,8 +14,8 @@ class Render
     /**
      * Обрабатывает текст и tts, применяет директивы и финализацию.
      *
-     * @param array $value ['text' => string, 'tts' => string]
-     * @return array ['text' => string, 'tts' => string]
+     * @param array<string,string> $value ['text' => string, 'tts' => string]
+     * @return array<string,string> ['text' => string, 'tts' => string]
      */
     public static function process(array $value): array
     {
@@ -33,7 +33,8 @@ class Render
      * Полезно для кнопок, где не нужны audio, pause и tts.
      *
      * @param string $text Исходный текст
-     * @param array $allowed Список разрешенных директив ['plural', 'rand', 'quotes']
+     * @param array<int,string> $allowed Список разрешенных директив ['plural', 'rand', 'quotes']
+     * @return string
      */
     public static function processOnly(string $text, array $allowed = []): string
     {
@@ -46,13 +47,16 @@ class Render
     }
 
     /**
-     * Обновленный метод compile с поддержкой фильтрации.
-     */
+     * Обновленный метод compile с поддержкой фильтрации.     *
+     * @param string $value
+     * @param string|null $mode
+     * @param array<int,string> $allowed
+     * @return string     */
     private static function compile(string $value, ?string $mode = null, array $allowed = []): string
     {
         $pattern = '/\@([a-zA-Z0-9_]+)\s*(\((?:[^()\'"\\\\]|\\\\.|(?:\'(?:\\\\.|[^\'\\\\])*\')|(?:"(?:\\\\.|[^"\\\\])*")|(?2))*\))/s';
 
-        return preg_replace_callback($pattern, function ($matches) use ($mode, $allowed) {
+        $result = preg_replace_callback($pattern, function ($matches) use ($mode, $allowed) {
             $name = $matches[1];
             $rawArgs = $matches[2];
 
@@ -75,6 +79,9 @@ class Render
 
             return $matches[0];
         }, $value);
+
+        // preg_replace_callback может вернуть null при ошибке — возвращаем исходную строку в таком случае
+        return is_string($result) ? $result : $value;
     }
 
     // --- Обработчики директив ---
@@ -123,7 +130,7 @@ class Render
     }
 
     /**
-     * @rand(A|B)
+     * Пример использования директивы: rand(A|B)
      */
     private static function directiveRand(string $args, string $mode): string
     {
@@ -131,7 +138,7 @@ class Render
     }
 
     /**
-     * @plural(5, [яблоко, яблока, яблок])
+     * Пример использования директивы: plural(5, ["яблоко", "яблока", "яблок"])
      */
     private static function directivePlural(string $args, string $mode): string
     {
@@ -154,7 +161,7 @@ class Render
         if (function_exists('plural')) {
             return plural($count, $forms);
         }
-        return $count . ' ' . ($forms[2] ?? end($forms) ?? '');
+        return $count . ' ' . ($forms[2] ?? (count($forms) ? end($forms) : ''));
     }
 
     /**
@@ -172,7 +179,7 @@ class Render
     }
 
     /**
-     * @audio(cat.mp3)
+     * Пример использования директивы: audio(cat.mp3)
      */
     private static function directiveAudio(string $args, string $mode): string
     {
@@ -183,6 +190,12 @@ class Render
         if (class_exists(Assets::class)) {
             $variant = Assets::get($variant) ?? $variant;
         }
+
+        // Гарантируем строку (Assets::get может вернуть mixed)
+        if (!is_scalar($variant)) {
+            $variant = '';
+        }
+        $variant = (string) $variant;
 
         if (!str_ends_with($variant, '.opus')) {
             $variant .= '.opus';
@@ -214,18 +227,25 @@ class Render
 
         // 2. Убираем акценты (плюс перед буквой) только для экрана
         if ($mode === 'text') {
-            $content = preg_replace('/\+(?=[a-zA-Zа-яА-Яё])/iu', '', $content);
+            $replaced = preg_replace('/\+(?=[a-zA-Zа-яА-Яё])/iu', '', $content);
+            $content = is_string($replaced) ? $replaced : $content;
         }
 
         // 3. Схлопываем множественные пробелы в один
         // 4. Триммим каждую строку
         // 5. Собираем обратно
-        return trim(implode("\n", array_map('trim', explode("\n", preg_replace('/ {2,}/', ' ', $content)))));
+        $collapsed = preg_replace('/ {2,}/', ' ', $content);
+        $collapsed = is_string($collapsed) ? $collapsed : $content;
+
+        return trim(implode("\n", array_map('trim', explode("\n", $collapsed))));
     }
 
     /**
      * Умное разбиение аргументов по запятой.
      * Учитывает кавычки "" '' и скобки [].
+     *
+     * @param string $argsRaw
+     * @return array<int,string>
      */
     private static function parseArgs(string $argsRaw): array
     {
@@ -271,6 +291,10 @@ class Render
         return array_values(array_filter($result, fn($r) => $r !== ''));
     }
 
+    /**
+     * @param string|array<int,string> $variants
+     * @return string
+     */
     public static function variant(string|array $variants): string
     {
         if (is_string($variants)) {

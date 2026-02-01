@@ -10,7 +10,7 @@ use Alice\Support\Container;
 class Intent
 {
     /**
-     * @param array $data
+     * @param array<string,mixed> $data
      */
     public function __construct(protected array $data)
     {
@@ -21,15 +21,32 @@ class Intent
      * Получить слот по имени.
      *
      * @param string $name
-     * @param array|null $default
+     * @param mixed $default Значение по умолчанию или callable
      * @return Slot|null
      */
-    public function slot(string $name, ?array $default = null): ?Slot
+    public function slot(string $name, mixed $default = null): ?Slot
     {
-        if (isset($this->data['slots'][$name])) {
-            return new Slot($this->data['slots'][$name]);
-        } else {
-            return Container::getInstance()->call($default);
+        /** @var array<string,mixed>|null $slots */
+        $slots = $this->data['slots'] ?? null;
+        $slots = is_array($slots) ? $slots : null;
+
+        if ($slots !== null && isset($slots[$name]) && is_array($slots[$name])) {
+            /** @var array<string,mixed> $slotData */
+            $slotData = $slots[$name];
+            return new Slot($slotData);
         }
+
+        if ($default === null) {
+            return null;
+        }
+
+        if (is_callable($default) || is_string($default) || is_array($default)) {
+            $res = Container::getInstance()->call($default);
+            return $res instanceof Slot ? $res : null;
+        }
+
+        return null;
     }
+
+
 }

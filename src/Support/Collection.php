@@ -12,14 +12,23 @@ use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
 
+/**
+ * Общая коллекция.
+ *
+ * @phpstan-consistent-constructor
+ * @template TValue
+ * @implements ArrayAccess<int|string,TValue>
+ * @implements IteratorAggregate<int|string,TValue>
+ */
 class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
 {
+    /** @var array<int|string,TValue> */
     protected array $items = [];
 
     /**
      * Создаёт новый экземпляр коллекции.
      *
-     * @param array $items Начальные элементы коллекции
+     * @param array<int|string,TValue> $items Начальные элементы коллекции
      */
     public function __construct(array $items = [])
     {
@@ -29,7 +38,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * Вернуть все элементы коллекции.
      *
-     * @return array
+     * @return array<int|string,TValue>
      */
     public function all(): array
     {
@@ -55,6 +64,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
             return $default;
         }
 
+        /** @var array<int|string,mixed> $array */
         $array = $this->items;
         foreach (explode('.', $key) as $segment) {
             if (is_array($array) && array_key_exists($segment, $array)) {
@@ -162,7 +172,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
                 $array = &$array[$segment];
             }
 
-            unset($array[$last]);
+            if (is_array($array) && array_key_exists($last, $array)) {
+                unset($array[$last]);
+            }
         }
 
         return $this;
@@ -182,8 +194,8 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * Сливает переданные элементы в текущую коллекцию (array_replace_recursive).
      *
-     * @param array $items
-     * @return static
+     * @param array<int|string,TValue> $items
+     * @return $this
      */
     public function merge(array $items): static
     {
@@ -194,12 +206,18 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * Применяет callback ко всем элементам коллекции и возвращает новую коллекцию.
      *
-     * @param callable $callback
-     * @return static
+     * @template TReturn
+     * @param callable(TValue,int|string):TReturn $callback Функция преобразования (value, key): TReturn
+     * @return static<TReturn>
      */
     public function map(callable $callback): static
     {
-        return new static(array_map($callback, $this->items));
+        $result = [];
+        foreach ($this->items as $key => $value) {
+            $result[] = $callback($value, $key);
+        }
+
+        return new static($result);
     }
 
     /**
@@ -208,12 +226,19 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * Callback получает значение элемента и его ключ. Если функция возвращает истинное
      * значение — элемент остается в результирующей коллекции.
      *
-     * @param callable $callback Функция фильтрации
-     * @return static
+     * @param callable(TValue,int|string):bool $callback Функция фильтрации (value, key): bool
+     * @return static<TValue>
      */
     public function filter(callable $callback): static
     {
-        return new static(array_filter($this->items, $callback));
+        $result = [];
+        foreach ($this->items as $key => $value) {
+            if ($callback($value, $key)) {
+                $result[$key] = $value;
+            }
+        }
+
+        return new static($result);
     }
 
     /**
@@ -301,7 +326,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * Преобразовать коллекцию в массив (рекурсивно вызывая toArray у вложенных коллекций).
      *
-     * @return array
+     * @return array<int|string,mixed>
      */
     public function toArray(): array
     {
@@ -323,7 +348,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * Возвращает итератор для коллекции.
      *
-     * @return Traversable
+     * @return Traversable<int|string,TValue>
      */
     public function getIterator(): Traversable
     {
@@ -338,6 +363,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      */
     public function offsetExists(mixed $offset): bool
     {
+        if (!is_string($offset) && !is_int($offset)) {
+            return false;
+        }
         return $this->has($offset);
     }
 
@@ -349,6 +377,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      */
     public function offsetGet(mixed $offset): mixed
     {
+        if (!is_string($offset) && !is_int($offset)) {
+            return null;
+        }
         return $this->get($offset);
     }
 
@@ -366,9 +397,14 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     {
         if (is_null($offset)) {
             $this->items[] = $value;
-        } else {
-            $this->set($offset, $value);
+            return;
         }
+
+        if (!is_string($offset) && !is_int($offset)) {
+            throw new InvalidArgumentException('Offset must be a string or int');
+        }
+
+        $this->set($offset, $value);
     }
 
     /**
@@ -379,6 +415,9 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      */
     public function offsetUnset(mixed $offset): void
     {
+        if (!is_string($offset) && !is_int($offset)) {
+            return;
+        }
         $this->remove($offset);
     }
 
@@ -387,7 +426,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      *
      * Преобразует коллекцию в массив, пригодный для сериализации в JSON.
      *
-     * @return array
+     * @return array<int|string,mixed>
      */
     public function jsonSerialize(): array
     {
@@ -402,7 +441,8 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      */
     public function toJson(int $options = 0): string
     {
-        return json_encode($this->jsonSerialize(), $options);
+        $json = json_encode($this->jsonSerialize(), $options);
+        return $json === false ? '' : $json;
     }
 
     /**

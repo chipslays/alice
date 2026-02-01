@@ -19,14 +19,13 @@ use ReflectionParameter;
 use ReflectionUnionType;
 use ReflectionIntersectionType;
 
-/**
- * Базовая реализация исключений PSR-11.
- */
 class ContainerException extends Exception implements ContainerExceptionInterface {}
 class NotFoundException extends ContainerException implements NotFoundExceptionInterface {}
 
 /**
  * Простой DI-контейнер с поддержкой singleton/bind/instance и автозависимостей через Reflection.
+ *
+ * @phpstan-consistent-constructor
  */
 class Container implements ContainerInterface
 {
@@ -46,19 +45,16 @@ class Container implements ContainerInterface
 
     /**
      * Получить глобальный экземпляр контейнера.
-     */
-    /**
-     * Получить глобальный экземпляр контейнера.
      *
-     * @return static
+     * @return Container
      */
-    public static function getInstance(): static
+    public static function getInstance(): Container
     {
-        if (self::$instance === null) {
-            self::$instance = new static();
+        if (static::$instance === null) {
+            static::$instance = new static();
         }
 
-        return self::$instance;
+        return static::$instance;
     }
 
     /**
@@ -185,6 +181,11 @@ class Container implements ContainerInterface
      * Вызов функции, замыкания, метода класса или invokable-класса
      * с автоматическим внедрением зависимостей.
      */
+    /**
+     * @param callable|array<string,mixed>|array<int,mixed>|string $callable
+     * @param array<string,mixed>|array<int,mixed> $parameters
+     * @return mixed
+     */
     public function call(callable|array|string $callable, array $parameters = []): mixed
     {
         // 1. Подготовка callable
@@ -197,14 +198,23 @@ class Container implements ContainerInterface
         $dependencies = $this->resolveDependencies($reflector, $parameters);
 
         // 4. Выполнение
-        return $callable(...$dependencies);
+        if (!is_callable($callable)) {
+            throw new ContainerException("Target is not callable.");
+        }
+
+        /** @var callable $call */
+        $call = $callable;
+        return $call(...$dependencies);
     }
 
     /**
      * Превращает "сырой" хендлер в валидный PHP callable,
      * попутно создавая объекты через контейнер.
+     *
+     * @param callable|array<string,mixed>|array<int,mixed>|string $callable
+    * @return callable|array<int,mixed>|string
      */
-    private function prepareCallable(callable|array|string $callable): callable
+    private function prepareCallable(callable|array|string $callable): callable|array|string
     {
         // Если это строка 'Class@method' или 'Class::method' -> превращаем в массив
         if (is_string($callable)) {
@@ -219,22 +229,31 @@ class Container implements ContainerInterface
         if (is_array($callable) && isset($callable[0])) {
             $class = $callable[0];
 
-            // Если первый элемент - строка (имя класса), создаем его через контейнер!
-            if (is_string($class)) {
-                $callable[0] = $this->get($class);
-            }
-
             // Если второго элемента не было (формат ['Class']), добавляем __invoke
-            if (!isset($callable[1])) {
-                $callable[1] = '__invoke';
+            $method = $callable[1] ?? '__invoke';
+
+            // Если первый элемент - строка (имя класса) — создаем объект через контейнер
+            if (is_string($class)) {
+                $object = $this->get($class);
+            } else {
+                $object = $class;
             }
 
-            return $callable; // Теперь это [$object, 'method']
+            /** @var object $object */
+            // Превращаем в замыкание, чтобы иметь стабильный callable-тип
+            return function(...$args) use ($object, $method) {
+                return $object->{$method}(...$args);
+            };
         }
 
         // Если это просто строка 'ClassName', и такой класс существует -> Invokable
         if (is_string($callable) && class_exists($callable)) {
-            return [$this->get($callable), '__invoke'];
+            return function(...$args) use ($callable) {
+                /** @var callable $invokable */
+                $invokable = $this->get($callable);
+                return $invokable(...$args);
+            };
+
         }
 
         return $callable;
@@ -242,14 +261,16 @@ class Container implements ContainerInterface
 
     /**
      * Создание класса через Reflection.
+     *
+     * @param string $className
      */
     private function resolve(string $className): object
     {
-        try {
-            $reflector = new ReflectionClass($className);
-        } catch (ReflectionException $e) {
-            throw new NotFoundException("Target class [$className] does not exist.", 0, $e);
+        if (!class_exists($className)) {
+            throw new NotFoundException("Target class [$className] does not exist.");
         }
+
+        $reflector = new ReflectionClass($className);
 
         if (!$reflector->isInstantiable()) {
             throw new ContainerException("Class [$className] is not instantiable.");
@@ -268,6 +289,11 @@ class Container implements ContainerInterface
 
     /**
      * Разрешение списка зависимостей.
+     */
+    /**
+     * @param ReflectionFunctionAbstract $method
+     * @param array<string,mixed>|array<int,mixed> $manualParameters
+     * @return array<int,mixed>
      */
     private function resolveDependencies(ReflectionFunctionAbstract $method, array $manualParameters = []): array
     {
@@ -346,6 +372,10 @@ class Container implements ContainerInterface
         return $concrete;
     }
 
+    /**
+     * @param callable|array<string,mixed>|array<int,mixed>|string $callable
+     * @return ReflectionFunctionAbstract
+     */
     private function getReflector(callable|array|string $callable): ReflectionFunctionAbstract
     {
         if (is_string($callable) && str_contains($callable, '::')) {
@@ -353,7 +383,14 @@ class Container implements ContainerInterface
         }
 
         if (is_array($callable)) {
-            return new ReflectionMethod($callable[0], $callable[1]);
+            $classOrObj = $callable[0] ?? null;
+            $method = $callable[1] ?? '__invoke';
+
+            if (!is_string($classOrObj) && !is_object($classOrObj)) {
+                throw new ContainerException('Unsupported callable array format.');
+            }
+
+            return new ReflectionMethod($classOrObj, $method);
         }
 
         // Исправление: Поддержка объектов с __invoke
@@ -361,6 +398,14 @@ class Container implements ContainerInterface
             return new ReflectionMethod($callable, '__invoke');
         }
 
-        return new ReflectionFunction($callable);
+        if ($callable instanceof Closure) {
+            return new ReflectionFunction($callable);
+        }
+
+        if (is_string($callable)) {
+            return new ReflectionFunction($callable);
+        }
+
+        throw new ContainerException('Unsupported callable type for reflector.');
     }
 }

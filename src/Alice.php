@@ -64,7 +64,7 @@ class Alice
      */
     public function fake(string $json): void
     {
-        $this->fakeContext = new Context(json_decode($json, true));
+        $this->fakeContext = new Context((array) (json_decode($json, true) ?? []));
     }
 
     /**
@@ -91,10 +91,22 @@ class Alice
         $context = $this->resolveContext();
 
         $container = Container::getInstance();
-        $container->instance(Interfaces::class, new Interfaces($context->get('meta.interfaces', [])));
-        $container->instance(Tokens::class, new Tokens($context->get('request.nlu.tokens', [])));
-        $container->instance(Entities::class, new Entities($context->get('request.nlu.entities', [])));
-        $container->instance(Intents::class, new Intents($context->get('request.nlu.intents', [])));
+
+        /** @var array<string,mixed> $interfaces */
+        $interfaces = (array) $context->get('meta.interfaces', []);
+        $container->instance(Interfaces::class, new Interfaces($interfaces));
+
+        /** @var array<'tokens'|int,mixed> $tokensData */
+        $tokensData = (array) $context->get('request.nlu.tokens', []);
+        $container->instance(Tokens::class, new Tokens($tokensData));
+
+        /** @var array<int,mixed> $entitiesData */
+        $entitiesData = (array) $context->get('request.nlu.entities', []);
+        $container->instance(Entities::class, new Entities($entitiesData));
+
+        /** @var array<int,mixed> $intentsData */
+        $intentsData = (array) $context->get('request.nlu.intents', []);
+        $container->instance(Intents::class, new Intents($intentsData));
 
         $this->bindServices($context);
 
@@ -145,17 +157,17 @@ class Alice
 
         $container->instance(
             State\Application::class,
-            new State\Application($context->get('state.application', []))
+            new State\Application((array) $context->get('state.application', []))
         );
 
         $container->instance(
             State\Session::class,
-            new State\Session($context->get('state.session', []))
+            new State\Session((array) $context->get('state.session', []))
         );
 
         $container->instance(
             State\User::class,
-            new State\User($context->get('state.user', []))
+            new State\User((array) $context->get('state.user', []))
         );
     }
 
@@ -167,7 +179,8 @@ class Alice
     protected function captureRequest(): Context
     {
         $input = file_get_contents('php://input');
-        return new Context(json_decode($input, true) ?? []);
+        $decoded = json_decode((string) $input, true);
+        return new Context((array) ($decoded ?? []));
     }
 
     /**
@@ -186,7 +199,7 @@ class Alice
      *
      * @param string          $text    Основной текст ответа
      * @param string|null     $tts     TTS-версия текста (по умолчанию равна $text)
-     * @param array|string    $buttons Массив или строка с кнопками
+     * @param array<int,mixed>|string    $buttons Массив или строка с кнопками
      * @param bool            $finish  Завершать ли сессию после ответа
      * @return void
      */

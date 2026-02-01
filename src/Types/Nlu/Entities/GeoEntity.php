@@ -14,7 +14,8 @@ class GeoEntity extends Entity
      */
     public function country(mixed $default = null): ?string
     {
-        return $this->value('country', $default);
+        $val = $this->value('country', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -24,7 +25,8 @@ class GeoEntity extends Entity
      */
     public function city(mixed $default = null): ?string
     {
-        return $this->value('city', $default);
+        $val = $this->value('city', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -34,7 +36,8 @@ class GeoEntity extends Entity
      */
     public function street(mixed $default = null): ?string
     {
-        return $this->value('street', $default);
+        $val = $this->value('street', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -44,7 +47,8 @@ class GeoEntity extends Entity
      */
     public function houseNumber(mixed $default = null): ?string
     {
-        return $this->value('house_number', $default);
+        $val = $this->value('house_number', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**
@@ -54,7 +58,8 @@ class GeoEntity extends Entity
      */
     public function airport(mixed $default = null): ?string
     {
-        return $this->value('airport', $default);
+        $val = $this->value('airport', $default);
+        return is_scalar($val) ? (string) $val : (is_null($val) ? null : null);
     }
 
     /**

@@ -16,7 +16,7 @@ class Group
     /**
      * Добавить middleware ко всем событиям в этой группе.
      *
-     * @param array|string|Closure $middleware
+     * @param array<int, Closure|array<int,mixed>|string>|string|Closure $middleware
      * @return $this
      */
     public function middleware(array|string|Closure $middleware): self

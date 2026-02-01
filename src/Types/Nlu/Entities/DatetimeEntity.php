@@ -15,14 +15,16 @@ class DatetimeEntity extends Entity
      */
     public function year(): ?string
     {
-        if (
-            isset($this->data['value']['year_is_relative']) &&
-            $this->data['value']['year_is_relative']
-        ) {
-            return date('Y', strtotime($this->data['value']['year'] . ' year'));
+        $val = $this->data['value'] ?? [];
+        if (!is_array($val)) {
+            return null;
         }
 
-        return $this->data['value']['year'] ?? null;
+        if (!empty($val['year_is_relative'])) {
+            return date('Y', (int) strtotime((string) ($val['year'] ?? '0') . ' year'));
+        }
+
+        return is_scalar($val['year'] ?? null) ? (string) $val['year'] : null;
     }
 
     /**
@@ -32,14 +34,16 @@ class DatetimeEntity extends Entity
      */
     public function month(): ?string
     {
-        if (
-            isset($this->data['value']['month_is_relative']) &&
-            $this->data['value']['month_is_relative']
-        ) {
-            return date('n', strtotime($this->data['value']['month'] . ' month'));
+        $val = $this->data['value'] ?? [];
+        if (!is_array($val)) {
+            return null;
         }
 
-        return $this->data['value']['month'] ?? null;
+        if (!empty($val['month_is_relative'])) {
+            return date('n', (int) strtotime((string) ($val['month'] ?? '0') . ' month'));
+        }
+
+        return is_scalar($val['month'] ?? null) ? (string) $val['month'] : null;
     }
 
     /**
@@ -49,14 +53,16 @@ class DatetimeEntity extends Entity
      */
     public function day(): ?string
     {
-        if (
-            isset($this->data['value']['day_is_relative']) &&
-            $this->data['value']['day_is_relative']
-        ) {
-            return date('j', strtotime($this->data['value']['day'] . ' day'));
+        $val = $this->data['value'] ?? [];
+        if (!is_array($val)) {
+            return null;
         }
 
-        return $this->data['value']['day'] ?? null;
+        if (!empty($val['day_is_relative'])) {
+            return date('j', (int) strtotime((string) ($val['day'] ?? '0') . ' day'));
+        }
+
+        return is_scalar($val['day'] ?? null) ? (string) $val['day'] : null;
     }
 
     /**
@@ -66,14 +72,16 @@ class DatetimeEntity extends Entity
      */
     public function hour(): ?string
     {
-        if (
-            isset($this->data['value']['hour_is_relative']) &&
-            $this->data['value']['hour_is_relative']
-        ) {
-            return date('G', strtotime($this->data['value']['hour'] . ' hour'));
+        $val = $this->data['value'] ?? [];
+        if (!is_array($val)) {
+            return null;
         }
 
-        return $this->data['value']['hour'] ?? null;
+        if (!empty($val['hour_is_relative'])) {
+            return date('G', (int) strtotime((string) ($val['hour'] ?? '0') . ' hour'));
+        }
+
+        return is_scalar($val['hour'] ?? null) ? (string) $val['hour'] : null;
     }
 
     /**
@@ -83,14 +91,16 @@ class DatetimeEntity extends Entity
      */
     public function minute(): ?string
     {
-        if (
-            isset($this->data['value']['minute_is_relative']) &&
-            $this->data['value']['minute_is_relative']
-        ) {
-            return intval(date('i', strtotime($this->data['value']['minute'] . ' minute')));
+        $val = $this->data['value'] ?? [];
+        if (!is_array($val)) {
+            return null;
         }
 
-        return $this->data['value']['minute'] ?? null;
+        if (!empty($val['minute_is_relative'])) {
+            return (string) intval(date('i', (int) strtotime((string) ($val['minute'] ?? '0') . ' minute')));
+        }
+
+        return is_scalar($val['minute'] ?? null) ? (string) $val['minute'] : null;
     }
 
     /**
@@ -126,10 +136,11 @@ class DatetimeEntity extends Entity
 
         $dateStr = Render::finalize($date . ' ' . $time, 'text');
 
+        $tz = null;
         if ($timezone) {
-            $timezone = new DateTimeZone($timezone);
+            $tz = new DateTimeZone($timezone);
         }
 
-        return new DateTime($dateStr, $timezone ?? null);
+        return new DateTime($dateStr, $tz);
     }
 }

@@ -16,6 +16,7 @@ class Image
 
     protected CurlHandle $httpClient;
 
+    /** @var array<int|string,mixed> */
     protected array $oncedData = [];
 
     /**
@@ -45,7 +46,7 @@ class Image
      * Для каждого аккаунта Яндекса на Диалоги
      * можно загрузить не больше 100 МБ картинок.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function status(): array
     {
@@ -64,7 +65,7 @@ class Image
     /**
      * Получить список загруженных изображений.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function all(): array
     {
@@ -83,12 +84,12 @@ class Image
     /**
      * Удалить изображение из Диалогов.
      *
-     * @param string $id
-     * @return array
+     * @param string|int $id
+     * @return array<string,mixed>
      */
-    public function delete(string $id): array
+    public function delete(string|int $id): array
     {
-        $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/images/' . $id;
+        $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/images/' . (string) $id;
 
         curl_setopt($this->httpClient, CURLOPT_URL, $endpoint);
         curl_setopt($this->httpClient, CURLOPT_CUSTOMREQUEST, 'DELETE');
@@ -119,17 +120,24 @@ class Image
         }
 
         if (!file_exists($image)) {
-            $response = $this->uploadByUrl($image);
+            /** @var array<string,mixed> $response */
+            $response = (array) $this->uploadByUrl($image);
         } else {
-            $response = $this->uploadByFile($image);
+            /** @var array<string,mixed> $response */
+            $response = (array) $this->uploadByFile($image);
         }
 
-        // Если ответ не содержит картинку
-        if (!isset($response['image']['id'])) {
+        // Если ответ не содержит картинку или id — возвращаем null
+        if (!isset($response['image']) || !is_array($response['image']) || !isset($response['image']['id'])) {
             return null;
         }
 
-        $imageId = $response['image']['id'];
+        $idVal = $response['image']['id'];
+        if (!is_scalar($idVal)) {
+            return null;
+        }
+
+        $imageId = (string) $idVal;
 
         // Кешируем картинку
         if ($cache) {
@@ -167,13 +175,13 @@ class Image
      * Загрузить изображение по ссылке.
      *
      * @param string $url
-     * @return array
+     * @return array<string,mixed>
      */
     public function uploadByUrl(string $url): array
     {
         $endpoint = $this->host . '/api/v1/skills/' . $this->skillId . '/images';
 
-        $payload = json_encode(compact('url'));
+        $payload = json_encode(compact('url')) ?: '{}';
 
         curl_setopt($this->httpClient, CURLOPT_URL, $endpoint);
         curl_setopt($this->httpClient, CURLOPT_POST, true);
@@ -192,7 +200,7 @@ class Image
      * Загрузить локальное изображение.
      *
      * @param string $file
-     * @return array
+     * @return array<string,mixed>
      */
     public function uploadByFile(string $file): array
     {
@@ -221,14 +229,15 @@ class Image
      */
     public function retrieve(string $image): ?string
     {
-        return @file_get_contents($this->path . '/' . md5($image));
+        $content = @file_get_contents($this->path . '/' . md5($image));
+        return $content === false ? null : $content;
     }
 
     /**
      * Удалить изображение из кеша.
      *
      * @param string $image Ссылка или путь до локального файла.
-     * @return self
+     * @return static
      */
     public function forget(string $image): static
     {
@@ -238,13 +247,15 @@ class Image
     }
 
     /**
-     * @param string $response
-     * @param string|null $image
-     * @return array
+     * Декодирует HTTP-ответ из сервиса.
+     *
+     * @param bool|string $response Ответ от cURL
+     * @return array<string,mixed>
      */
-    protected function handle(string $response): array
+    protected function handle(bool|string $response): array
     {
-        return json_decode($response, true);
+        $decoded = json_decode((string) $response, true);
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -258,8 +269,8 @@ class Image
             $this->delete($id);
 
             // Если картинка закеширована, удаляем кеш тоже
-            if ($item['cache']) {
-                $this->forget($item['image']);
+            if (is_array($item) && !empty($item['cache']) && isset($item['image'])) {
+                $this->forget((string) $item['image']);
             }
         }
     }

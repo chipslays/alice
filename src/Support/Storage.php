@@ -96,7 +96,12 @@ class Storage
      */
     public function clear(): void
     {
-        foreach (glob($this->directory . DIRECTORY_SEPARATOR . '*.json') as $file) {
+        $files = glob($this->directory . DIRECTORY_SEPARATOR . '*.json');
+        if (!is_array($files)) {
+            return;
+        }
+
+        foreach ($files as $file) {
             if (is_file($file)) {
                 unlink($file);
             }
@@ -106,6 +111,9 @@ class Storage
     /**
      * Читает файл, проверяет структуру и TTL.
      * Если файл протух или битый — удаляет его и возвращает null.
+     *
+     * @param string $key
+     * @return array<string,mixed>|null
      */
     protected function readPayload(string $key): ?array
     {
@@ -114,8 +122,12 @@ class Storage
         if (!file_exists($filename)) {
             return null;
         }
-
         $content = file_get_contents($filename);
+        if ($content === false) {
+            $this->remove($key);
+            return null;
+        }
+
         $payload = json_decode($content, true);
 
         // 1. Проверка структуры
@@ -161,8 +173,10 @@ class Storage
     protected function getSkillId(): ?string
     {
         try {
+            /** @var Settings $settings */
             $settings = Container::getInstance()->get(Settings::class);
-            return $settings->get('skill_id');
+            $skillId = $settings->get('skill_id');
+            return is_scalar($skillId) ? (string) $skillId : null;
         } catch (Throwable) {
             return null;
         }

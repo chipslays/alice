@@ -7,6 +7,7 @@ namespace Alice\Types\Directives\AudioPlayer;
  */
 class Stream
 {
+    /** @var array<string,mixed> */
     protected array $stream = [
         'url' => null,
         'offset_ms' => 0,
@@ -29,7 +30,7 @@ class Stream
     /**
      * Преобразовать Stream в массив.
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function toArray(): array
     {

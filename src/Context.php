@@ -19,6 +19,9 @@ use Alice\Types\Nlu\Tokens\Tokens;
  * Расширяет Collection и предоставляет методы для получения application, session, user,
  * а также доступа к интерфейсам NLU (tokens, entities, intents).
  */
+/**
+ * @extends Collection<mixed>
+ */
 class Context extends Collection
 {
     /**
@@ -28,7 +31,9 @@ class Context extends Collection
      */
     public function application(): Application
     {
-        return Container::getInstance()->get(Application::class);
+        /** @var Application $app */
+        $app = Container::getInstance()->get(Application::class);
+        return $app;
     }
 
     /**
@@ -38,7 +43,9 @@ class Context extends Collection
      */
     public function session(): Session
     {
-        return Container::getInstance()->get(Session::class);
+        /** @var Session $session */
+        $session = Container::getInstance()->get(Session::class);
+        return $session;
     }
 
     /**
@@ -48,7 +55,9 @@ class Context extends Collection
      */
     public function user(): User
     {
-        return Container::getInstance()->get(User::class);
+        /** @var User $user */
+        $user = Container::getInstance()->get(User::class);
+        return $user;
     }
 
     /**
@@ -58,7 +67,9 @@ class Context extends Collection
      */
     public function interfaces(): Interfaces
     {
-        return Container::getInstance()->get(Interfaces::class);
+        /** @var Interfaces $interfaces */
+        $interfaces = Container::getInstance()->get(Interfaces::class);
+        return $interfaces;
     }
 
     /**
@@ -68,7 +79,9 @@ class Context extends Collection
      */
     public function tokens(): Tokens
     {
-        return Container::getInstance()->get(Tokens::class);
+        /** @var Tokens $tokens */
+        $tokens = Container::getInstance()->get(Tokens::class);
+        return $tokens;
     }
 
     /**
@@ -78,7 +91,9 @@ class Context extends Collection
      */
     public function entities(): Entities
     {
-        return Container::getInstance()->get(Entities::class);
+        /** @var Entities $entities */
+        $entities = Container::getInstance()->get(Entities::class);
+        return $entities;
     }
 
     /**
@@ -88,7 +103,9 @@ class Context extends Collection
      */
     public function intents(): Intents
     {
-        return Container::getInstance()->get(Intents::class);
+        /** @var Intents $intents */
+        $intents = Container::getInstance()->get(Intents::class);
+        return $intents;
     }
 
     /**
@@ -99,7 +116,9 @@ class Context extends Collection
      */
     public function enter(string $sceneName): void
     {
-        Container::getInstance()->get(Stage::class)->enter($this, $sceneName);
+        /** @var Stage $stage */
+        $stage = Container::getInstance()->get(Stage::class);
+        $stage->enter($sceneName);
     }
 
     /**
@@ -109,7 +128,9 @@ class Context extends Collection
      */
     public function leave(): void
     {
-        Container::getInstance()->get(Stage::class)->leave($this);
+        /** @var Stage $stage */
+        $stage = Container::getInstance()->get(Stage::class);
+        $stage->leave();
     }
 
     /**
