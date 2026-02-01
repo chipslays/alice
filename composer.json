@@ -10,6 +10,15 @@
             "helpers.php"
         ]
     },
+    "scripts": {
+        "post-install-cmd": [
+            "@php scripts/install-githooks.php"
+        ],
+        "post-update-cmd": [
+            "@php scripts/install-githooks.php"
+        ],
+        "check:phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
+    },
     "require-dev": {
         "symfony/var-dumper": "^8.0",
         "phpstan/phpstan": "^2.1"
