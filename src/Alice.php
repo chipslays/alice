@@ -17,6 +17,8 @@ use Alice\Types\Nlu\Entities\Entities;
 use Alice\Types\Nlu\Intents\Intents;
 use Alice\Types\Nlu\Tokens\Tokens;
 use Closure;
+use JsonException;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -36,6 +38,13 @@ class Alice
     protected ?Context $fakeContext = null;
 
     /**
+     * Реальный контекст запроса.
+     *
+     * @var Context|null
+     */
+    protected ?Context $realContext = null;
+
+    /**
      * Слой сцен для регистрации и выполнения логики диалога.
      *
      * @var Stage
@@ -43,29 +52,64 @@ class Alice
     public readonly Stage $stage;
 
     /**
+     * Текущий контекст запроса.
+     * Доступен сразу после создания экземпляра Alice.
+     *
+     * @var Context|null
+     */
+    public protected(set) ?Context $context = null;
+
+    /**
      * Создает экземпляр Alice и регистрирует основные сервисы в контейнере.
+     * Сразу инициализирует контекст запроса.
      *
      * @param Settings $settings Настройки приложения
      */
     public function __construct(
-        public readonly Settings $settings = new Settings
+        public readonly Settings $settings = new Settings,
     ) {
+        $this->initializeContext();
+
         $container = Container::getInstance();
+
         $container->instance(Alice::class, $this);
         $container->instance(Settings::class, $settings);
         $container->instance(Stage::class, $this->stage = new Stage);
     }
 
     /**
-     * Устанавливает фейковый контекст из JSON (для тестирования).
+     * Инициализирует контекст запроса (реальный или фейковый).
      *
-     * @param array<string|int, mixed>|string $data JSON-строка с контекстом запроса
      * @return void
      */
-    public function fake(array|string $data): void
+    protected function initializeContext(): void
+    {
+        $this->context = $this->resolveContext();
+
+        // Сразу регистрируем контекст и основные сервисы в контейнере
+        if ($this->context) {
+            $this->bindServices($this->context);
+        }
+    }
+
+    /**
+     * Устанавливает фейковый контекст из JSON (для тестирования).
+     * После установки фейкового контекста, он становится доступен через $alice->context.
+     *
+     * @param array<string|int, mixed>|string $data JSON-строка с контекстом запроса
+     * @return static
+     */
+    public function fake(array|string $data): static
     {
         $decodedData = is_array($data) ? $data : (json_decode($data, true) ?? []);
+
         $this->fakeContext = new Context((array) $decodedData);
+
+        $this->context = $this->fakeContext;
+
+        $this->bindServices($this->context);
+
+        return $this;
     }
 
     /**
@@ -89,38 +133,44 @@ class Alice
      */
     public function dispatch(): void
     {
-        $context = $this->resolveContext();
+        if (!$this->context) {
+            // Пробуем инициализировать контекст ещё раз, возможно
+            // был передан фейковый контекст для тестирования
+            $this->initializeContext();
+
+            if (!$this->context) {
+                throw new RuntimeException('Контекст запроса не определен.');
+            }
+        }
 
         $container = Container::getInstance();
 
         /** @var array<string,mixed> $interfaces */
-        $interfaces = (array) $context->get('meta.interfaces', []);
+        $interfaces = (array) $this->context->get('meta.interfaces', []);
         $container->instance(Interfaces::class, new Interfaces($interfaces));
 
         /** @var array<'tokens'|int,mixed> $tokensData */
-        $tokensData = (array) $context->get('request.nlu.tokens', []);
+        $tokensData = (array) $this->context->get('request.nlu.tokens', []);
         $container->instance(Tokens::class, new Tokens($tokensData));
 
         /** @var array<int,mixed> $entitiesData */
-        $entitiesData = (array) $context->get('request.nlu.entities', []);
+        $entitiesData = (array) $this->context->get('request.nlu.entities', []);
         $container->instance(Entities::class, new Entities($entitiesData));
 
         /** @var array<int,mixed> $intentsData */
-        $intentsData = (array) $context->get('request.nlu.intents', []);
+        $intentsData = (array) $this->context->get('request.nlu.intents', []);
         $container->instance(Intents::class, new Intents($intentsData));
 
-        $this->bindServices($context);
-
         try {
-            if ($context->isPing()) {
+            if ($this->context->isPing()) {
                 $this->reply('pong', finish: true);
             } else {
                 // Проверяем нужно ли повторить предыдущий запрос,
                 // и если да — передаем ID последнего ответа
                 // в диспатчер сцены и событий
                 $eventId = null;
-                if ($context->shouldRepeatPreviousRequest() && !$context->repeatShouldBeHandledManually) {
-                    $replyValue = $context->get('state.session.$reply');
+                if ($this->context->shouldRepeatPreviousRequest() && !$this->context->repeatShouldBeHandledManually) {
+                    $replyValue = $this->context->get('state.session.$reply');
                     $eventId = is_int($replyValue) ? $replyValue : null;
                 }
 
@@ -133,7 +183,7 @@ class Alice
         } catch (Throwable $th) {
             // Если зарегистрирован обработчик ошибок — вызываем его
             if ($this->errorHandler) {
-                call_user_func($this->errorHandler, $context, $th);
+                call_user_func($this->errorHandler, $this->context, $th);
             } else {
                 // Иначе выбрасываем исключение дальше
                 throw $th;
@@ -150,11 +200,19 @@ class Alice
     /**
      * Возвращает текущий контекст запроса; если установлен фейковый контекст — возвращает его.
      *
-     * @return Context
+     * @return Context|null
      */
-    protected function resolveContext(): Context
+    protected function resolveContext(): ?Context
     {
-        return $this->fakeContext ?? $this->captureRequest();
+        if ($this->fakeContext) {
+            return $this->fakeContext;
+        }
+
+        if ($this->realContext) {
+            return $this->realContext;
+        }
+
+        return $this->realContext = $this->captureRequest();
     }
 
     /**
@@ -188,18 +246,27 @@ class Alice
     /**
      * Читает сырой ввод из php://input и преобразует его в объект Context.
      *
-     * @return Context
+     * @return Context|null
      */
-    protected function captureRequest(): Context
+    protected function captureRequest(): ?Context
     {
         $input = file_get_contents('php://input');
-        $decoded = json_decode((string) $input, true, flags: JSON_THROW_ON_ERROR);
+
+        if ($input === false) {
+            return null;
+        }
+
+        try {
+            $decoded = json_decode($input, true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            return null;
+        }
 
         if (!is_array($decoded)) {
             die('Всё хорошо, не переживай 👌');
         }
 
-        return new Context((array) $decoded);
+        return new Context($decoded);
     }
 
     /**
