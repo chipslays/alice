@@ -1,0 +1,48 @@
+{
+    "meta": {
+      "locale": "ru-RU",
+      "timezone": "UTC",
+      "client_id": "ru.yandex.searchplugin/7.16 (none none; android 4.4.2)",
+      "interfaces": {
+        "screen": {},
+        "payments": {},
+        "account_linking": {}
+      }
+    },
+    "session": {
+      "message_id": 1,
+      "session_id": "570b57df-8a33-4842-938a-a6e6807564bf",
+      "skill_id": "9cd33d95-f945-49a6-9238-e0389db96d90",
+      "user": {
+        "user_id": "5B53951907E02B255BFD8EAAFA9001225D168EF384D5B3EB67A21EF330CCBEAB"
+      },
+      "application": {
+        "application_id": "4518AB6CBE34705C24285C5D29275587658490AF92C4F213EFB79E7EEA5E16D6"
+      },
+      "new": false,
+      "user_id": "4518AB6CBE34705C24285C5D29275587658490AF92C4F213EFB79E7EEA5E16D6"
+    },
+    "request": {
+      "command": "ping",
+      "original_utterance": "ping",
+      "nlu": {
+        "tokens": [
+          "ping"
+        ],
+        "entities": [],
+        "intents": {}
+      },
+      "markup": {
+        "dangerous_context": false
+      },
+      "type": "SimpleUtterance"
+    },
+    "state": {
+      "session": {
+        "already_call": true
+      },
+      "user": {},
+      "application": {}
+    },
+    "version": "1.0"
+  }

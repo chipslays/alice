@@ -1,0 +1,30 @@
+{
+    "name": "alice-php/sdk",
+    "description": "Простой и удобный способ создавать навыки для Алисы.",
+    "type": "library",
+    "homepage": "https://github.com/chipslays/alice",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Alice\\": "src/"
+        },
+        "files": [
+            "helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Alice\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "check:phpstan": "vendor/bin/phpstan analyse -c phpstan.neon --memory-limit=1G"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^8.0",
+        "phpstan/phpstan": "^2.1"
+    },
+    "require": {
+        "psr/container": "^2.0"
+    }
+}
