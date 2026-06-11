@@ -316,6 +316,64 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     }
 
     /**
+     * Добавляет значения в конец массива по указанному ключу.
+     *
+     * @param string|int $key
+     * @param array $values
+     * @return static
+     */
+    public function append(string|int $key, array $values): static
+    {
+        if (empty($values)) {
+            return $this;
+        }
+
+        $current = $this->get($key);
+
+        if (is_null($current)) {
+            $this->set($key, $values);
+            return $this;
+        }
+
+        if (!is_array($current)) {
+            $this->set($key, array_merge([$current], $values));
+            return $this;
+        }
+
+        $this->set($key, array_merge($current, $values));
+        return $this;
+    }
+
+    /**
+     * Добавляет значения в начало массива по указанному ключу.
+     *
+     * @param string|int $key
+     * @param array $values
+     * @return static
+     */
+    public function prepend(string|int $key, array $values): static
+    {
+        if (empty($values)) {
+            return $this;
+        }
+
+        $current = $this->get($key);
+
+        if (is_null($current)) {
+            $this->set($key, $values);
+            return $this;
+        }
+
+        if (!is_array($current)) {
+            $this->set($key, array_merge($values, [$current]));
+            return $this;
+        }
+
+        $this->set($key, array_merge($values, $current));
+        return $this;
+    }
+
+    /**
      * Увеличивает числовое значение элемента коллекции.
      *
      * @param string|int $key Ключ элемента
