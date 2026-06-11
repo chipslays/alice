@@ -174,7 +174,6 @@ class Alice
                     $eventId = is_int($repeatValue) ? $repeatValue : null;
                 }
 
-                file_put_contents(storage_path('zzz.log'), $eventId);
                 $handledByScene = $this->stage->dispatch($eventId);
 
                 if (!$handledByScene) {

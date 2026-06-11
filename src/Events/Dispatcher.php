@@ -102,10 +102,10 @@ class Dispatcher
             // Если не нашли событие, то продолжаем дальше по обычной логике
         }
 
-        foreach ($sortedListeners as $id => $event) {
+        foreach ($sortedListeners as $event) {
             if ($this->matches($event->rules, $context)) {
-                $this->fire($id, $event, $context);
-
+                $realId = spl_object_id($event); // берем настоящий ID
+                $this->fire($realId, $event, $context);
                 return true;
             }
         }
