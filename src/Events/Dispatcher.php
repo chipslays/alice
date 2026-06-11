@@ -136,7 +136,7 @@ class Dispatcher
 
             // Сохраняем ID текущего ответа в сессии,
             // только если это не запрос на повтор
-            if ($context->shouldRepeatPreviousRequest() && !$context->repeatShouldBeHandledManually) {
+            if (!$context->shouldRepeatPreviousRequest() && !$context->repeatShouldBeHandledManually) {
                 /** @var Session */
                 $session = $container->get(Session::class);
                 $session->set('$repeat', $id);

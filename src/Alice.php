@@ -170,10 +170,11 @@ class Alice
                 // в диспатчер сцены и событий
                 $eventId = null;
                 if ($this->context->shouldRepeatPreviousRequest() && !$this->context->repeatShouldBeHandledManually) {
-                    $replyValue = $this->context->get('state.session.$repeat');
-                    $eventId = is_int($replyValue) ? $replyValue : null;
+                    $repeatValue = $this->context->get('state.session.$repeat');
+                    $eventId = is_int($repeatValue) ? $repeatValue : null;
                 }
 
+                file_put_contents(storage_path('zzz.log'), $eventId);
                 $handledByScene = $this->stage->dispatch($eventId);
 
                 if (!$handledByScene) {
