@@ -117,6 +117,65 @@ trait Eventable
     }
 
     /**
+     * Регистрирует обработчик для оригинального текста запроса.
+     *
+     * @param array<int,string>|string $originalUtterance
+     * @param Closure|array<int,mixed>|string $handler Обработчик
+     * @return Event
+     */
+    public function onOriginalUtterance(array|string $originalUtterance, Closure|array|string $handler): Event
+    {
+        return $this->on(['request.original_utterance' => $originalUtterance], $handler);
+    }
+
+    /**
+     * Регистрирует обработчик для токенов (слов).
+     *
+     * Сработает если хотя бы 1 токен есть в запросе.
+     *
+     * @param array|string $token
+     * @param Closure|array|string $handler
+     * @return Event
+     */
+    public function onNluTokenAny(array|string $token, Closure|array|string $handler): Event
+    {
+        return $this->on(function (Context $context) use ($token): bool {
+            $tokens = $context->get('request.nlu.tokens', []);
+            $needles = is_array($token) ? $token : [$token];
+
+            foreach ($needles as $needle) {
+                if (in_array($needle, $tokens, true)) {
+                    return true;
+                }
+            }
+            return false;
+        }, $handler);
+    }
+
+    /**
+     * Регистрирует обработчик для токенов (слов).
+     *
+     * Сработает если все переданные токены есть в запросе.
+     *
+     * @param array $token
+     * @param Closure|array|string $handler
+     * @return Event
+     */
+    public function onNluToken(array $token, Closure|array|string $handler): Event
+    {
+        return $this->on(function (Context $context) use ($token): bool {
+            $tokens = $context->get('request.nlu.tokens', []);
+
+            foreach ($token as $needle) {
+                if (!in_array($needle, $tokens, true)) {
+                    return false;
+                }
+            }
+            return true;
+        }, $handler);
+    }
+
+    /**
      * Регистрирует обработчик для action-пэйлоада.
      *
      * @param array<int,string>|string $action Идентификатор action или список
