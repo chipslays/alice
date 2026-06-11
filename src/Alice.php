@@ -183,7 +183,7 @@ class Alice
         } catch (Throwable $th) {
             // Если зарегистрирован обработчик ошибок — вызываем его
             if ($this->errorHandler) {
-                call_user_func($this->errorHandler, $this->context, $th);
+                Container::getInstance()->call($this->errorHandler, [$this->context, $th]);
             } else {
                 // Иначе выбрасываем исключение дальше
                 throw $th;

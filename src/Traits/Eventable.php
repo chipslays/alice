@@ -17,7 +17,7 @@ trait Eventable
     protected ?Dispatcher $eventDispatcher = null;
 
     // Свойство для хранения обработчика ошибок
-    protected ?Closure $errorHandler = null;
+    protected Closure|array|string|null $errorHandler = null;
 
     /**
      * Регистрирует обработчик события с правилами.
@@ -60,10 +60,10 @@ trait Eventable
     /**
      * Устанавливает обработчик ошибок, вызываемый при исключениях.
      *
-     * @param Closure $handler Обработчик ошибок
+     * @param Closure|array|string $handler Обработчик ошибок
      * @return self
      */
-    public function onError(Closure $handler): self
+    public function onError(Closure|array|string $handler): self
     {
         $this->errorHandler = $handler;
 
