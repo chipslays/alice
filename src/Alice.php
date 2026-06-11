@@ -170,7 +170,7 @@ class Alice
                 // в диспатчер сцены и событий
                 $eventId = null;
                 if ($this->context->shouldRepeatPreviousRequest() && !$this->context->repeatShouldBeHandledManually) {
-                    $replyValue = $this->context->get('state.session.$reply');
+                    $replyValue = $this->context->get('state.session.$repeat');
                     $eventId = is_int($replyValue) ? $replyValue : null;
                 }
 
