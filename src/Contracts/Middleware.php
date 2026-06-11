@@ -15,7 +15,6 @@ interface Middleware
      *
      * @param Context $context
      * @param Closure $next
-     * @return mixed
      */
-    public function handle(Context $context, Closure $next): mixed;
+    public function handle(Context $context, Closure $next);
 }
