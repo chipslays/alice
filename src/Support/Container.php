@@ -188,23 +188,19 @@ class Container implements ContainerInterface
      */
     public function call(callable|array|string $callable, array $parameters = []): mixed
     {
-        // 1. Подготовка callable
-        $callable = $this->prepareCallable($callable);
-
-        // 2. Получение рефлексии
+        // Рефлектор получаем из ОРИГИНАЛЬНОГО callable, до обёртки
         $reflector = $this->getReflector($callable);
 
-        // 3. Резолвинг зависимостей
+        // Только после этого готовим исполняемый callable
+        $prepared = $this->prepareCallable($callable);
+
         $dependencies = $this->resolveDependencies($reflector, $parameters);
 
-        // 4. Выполнение
-        if (!is_callable($callable)) {
+        if (!is_callable($prepared)) {
             throw new ContainerException("Target is not callable.");
         }
 
-        /** @var callable $call */
-        $call = $callable;
-        return $call(...$dependencies);
+        return $prepared(...$dependencies);
     }
 
     /**
@@ -378,10 +374,17 @@ class Container implements ContainerInterface
      */
     private function getReflector(callable|array|string $callable): ReflectionFunctionAbstract
     {
+        // 'Class@method' -> ['Class', 'method']
+        if (is_string($callable) && str_contains($callable, '@')) {
+            $callable = explode('@', $callable);
+        }
+
+        // 'Class::method' -> ['Class', 'method']
         if (is_string($callable) && str_contains($callable, '::')) {
             $callable = explode('::', $callable);
         }
 
+        // ['Class', 'method'] или ['object', 'method']
         if (is_array($callable)) {
             $classOrObj = $callable[0] ?? null;
             $method = $callable[1] ?? '__invoke';
@@ -393,7 +396,7 @@ class Container implements ContainerInterface
             return new ReflectionMethod($classOrObj, $method);
         }
 
-        // Исправление: Поддержка объектов с __invoke
+        // Объект с __invoke
         if (is_object($callable) && !$callable instanceof Closure) {
             return new ReflectionMethod($callable, '__invoke');
         }
@@ -402,7 +405,12 @@ class Container implements ContainerInterface
             return new ReflectionFunction($callable);
         }
 
+        // Строка — имя класса (invokable) или обычная функция
         if (is_string($callable)) {
+            if (class_exists($callable)) {
+                return new ReflectionMethod($callable, '__invoke'); // <-- вот это было упущено
+            }
+
             return new ReflectionFunction($callable);
         }
 
