@@ -161,6 +161,8 @@ class Alice
         $intentsData = (array) $this->context->get('request.nlu.intents', []);
         $container->instance(Intents::class, new Intents($intentsData));
 
+        $this->registerComponents();
+
         try {
             if ($this->context->isPing()) {
                 $this->reply('pong', finish: true);
@@ -262,10 +264,6 @@ class Alice
             return null;
         }
 
-        if (!is_array($decoded)) {
-            die('Всё хорошо, не переживай 👌');
-        }
-
         return new Context($decoded);
     }
 
@@ -357,5 +355,20 @@ class Alice
         ob_end_clean();
 
         return $response !== false ? $response : '';
+    }
+
+    protected function registerComponents(): void
+    {
+        $components = $this->settings->get('components', []);
+
+        foreach ($components as $componentClass => $data) {
+            $component = new $componentClass($data);
+
+            if ($component instanceof Component) {
+                $component->register($this, $this->context, $this->settings);
+            } else {
+                throw new RuntimeException('Компоненты должны быть экземплярами класса ' . Component::class);
+            }
+        }
     }
 }
