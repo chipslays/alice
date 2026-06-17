@@ -7,6 +7,8 @@ use Alice\Settings;
 use Alice\Events\Dispatcher;
 use Alice\Scenes\Stage;
 use Alice\State;
+use Alice\Support\Assets;
+use Alice\Support\Buttons;
 use Alice\Support\Container;
 use Alice\Support\Defer;
 use Alice\Support\Render;
@@ -76,6 +78,9 @@ class Alice implements Eventable
         $container->instance(Alice::class, $this);
         $container->instance(Settings::class, $settings);
         $container->instance(Stage::class, $this->stage = new Stage);
+
+        Assets::load($this->settings->get('assets', []));
+        Buttons::load($this->settings->get('buttons', []));
     }
 
     /**
