@@ -86,9 +86,15 @@ class Entities
         return $this->get($type)->last(default: $default);
     }
 
-    public function filter(callable $callback): static
+    /**
+     * Отфильтровать сущности.
+     *
+     * @param callable $callback
+     * @return array
+     */
+    public function filter(callable $callback): array
     {
-        return new static(array_filter($this->entities, $callback));
+        return array_filter($this->entities, $callback);
     }
 
     /**
