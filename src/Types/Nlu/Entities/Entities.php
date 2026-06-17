@@ -86,6 +86,11 @@ class Entities
         return $this->get($type)->last(default: $default);
     }
 
+    public function filter(callable $callback): static
+    {
+        return new static(array_filter($this->entities, $callback));
+    }
+
     /**
      * Количество сущностей.
      * @return int
