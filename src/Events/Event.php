@@ -2,6 +2,8 @@
 
 namespace Alice\Events;
 
+use Alice\Support\Container;
+use Alice\Contracts\Eventable;
 use Closure;
 
 /**
@@ -25,6 +27,7 @@ class Event
      * @param Closure|array<int,mixed>|string $handler Обработчик события
      */
     public function __construct(
+        public readonly Eventable $eventable,
         public readonly Closure|array|string $rules,
         public readonly Closure|array|string $handler
     ) {
@@ -53,6 +56,19 @@ class Event
     {
         $middlewares = is_array($middlewares) ? $middlewares : [$middlewares];
         $this->middleware = array_merge($this->middleware, $middlewares);
+        return $this;
+    }
+
+    /**
+     * Позволяет добавить альтернативные правила для одного обработчика.
+     *
+     * @param Closure $callback
+     * @return static
+     */
+    public function or(Closure $callback): static
+    {
+        $callback($this->eventable, $this->handler);
+
         return $this;
     }
 }

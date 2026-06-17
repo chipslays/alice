@@ -6,13 +6,12 @@ use Alice\Context;
 use Alice\Events\Dispatcher;
 use Alice\Events\Event;
 use Alice\Events\Group;
-use Alice\Support\Container;
 use Closure;
 
 /**
  * Трейт, предоставляющий синтаксический сахар для регистрации событий и middleware.
  */
-trait Eventable
+trait WithEvents
 {
     protected ?Dispatcher $eventDispatcher = null;
 
@@ -28,7 +27,7 @@ trait Eventable
      */
     public function on(Closure|array|string $rules, Closure|array|string $handler): Event
     {
-        return $this->getEventDispatcher()->add($rules, $handler);
+        return $this->getEventDispatcher()->add($this, $rules, $handler);
     }
 
     /**

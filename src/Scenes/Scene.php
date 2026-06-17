@@ -3,17 +3,18 @@
 namespace Alice\Scenes;
 
 use Alice\Context;
+use Alice\Contracts\Eventable;
 use Alice\Events\Dispatcher;
 use Alice\Support\Container;
-use Alice\Traits\Eventable;
+use Alice\Traits\WithEvents;
 use Closure;
 
 /**
  * Представление сцены — контейнера обработчиков onEnter/onLeave и локального dispatcher'а.
  */
-class Scene
+class Scene implements Eventable
 {
-    use Eventable;
+    use WithEvents;
 
     // Диспетчер событий конкретно этой сцены
     protected Dispatcher $dispatcher;
@@ -55,7 +56,7 @@ class Scene
         return $this;
     }
 
-    // Реализация абстрактного метода из Eventable
+    // Реализация абстрактного метода из WithEvents
     protected function getEventDispatcher(): Dispatcher
     {
         return $this->dispatcher;

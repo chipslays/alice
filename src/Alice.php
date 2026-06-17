@@ -2,14 +2,15 @@
 
 namespace Alice;
 
+use Alice\Contracts\Eventable;
 use Alice\Settings;
 use Alice\Events\Dispatcher;
 use Alice\Scenes\Stage;
 use Alice\State;
 use Alice\Support\Container;
-use Alice\Traits\Eventable;
 use Alice\Support\Defer;
 use Alice\Support\Render;
+use Alice\Traits\WithEvents;
 use Alice\Types\Card\AbstractCard;
 use Alice\Types\Directives\AudioPlayer\AudioPlayer;
 use Alice\Types\Meta\Interfaces;
@@ -26,9 +27,9 @@ use Throwable;
  *
  * Отвечает за разрешение контекста, регистрацию сцен и запуск обработки запроса.
  */
-class Alice
+class Alice implements Eventable
 {
-    use Eventable;
+    use WithEvents;
 
     /**
      * Фейковый контекст, используемый в тестах.

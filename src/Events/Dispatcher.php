@@ -9,6 +9,7 @@ use Alice\Context;
 use Alice\Settings;
 use Alice\State\Session;
 use Alice\Support\Container;
+use Alice\Contracts\Eventable;
 use Closure;
 
 /**
@@ -59,9 +60,9 @@ class Dispatcher
      * @param Closure|array<int,mixed>|string $handler
      * @return Event
      */
-    public function add(Closure|array|string $rules, Closure|array|string $handler): Event
+    public function add(Eventable $eventable, Closure|array|string $rules, Closure|array|string $handler): Event
     {
-        $event = new Event($rules, $handler);
+        $event = new Event($eventable, $rules, $handler);
 
         foreach ($this->groupStack as $group) {
             /** @var array{middleware?: array<int, Closure|array<int,mixed>|string>|string|Closure} $group */
